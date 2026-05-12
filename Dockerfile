@@ -1,4 +1,4 @@
-FROM rust:1.77-slim AS builder
+FROM rust:1.85-slim AS builder
 
 RUN apt-get update && apt-get install -y pkg-config libssl-dev sqlite3 && rm -rf /var/lib/apt/lists/*
 
