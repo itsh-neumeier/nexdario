@@ -6,7 +6,7 @@ RUN cargo install sqlx-cli --no-default-features --features sqlite
 
 WORKDIR /app
 
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY migrations ./migrations
 COPY src ./src
 
