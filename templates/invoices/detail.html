@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ invoice.title }}</h1>
+    <span class="text-sm text-gray-500 font-mono">{{ invoice.invoice_number }}</span>
+  </div>
+  <div class="flex gap-2">
+    {% if invoice.status == "draft" %}
+    <a href="/invoices/{{ invoice.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    {% endif %}
+    {% if invoice.status == "approved" %}
+    <a href="/invoices/{{ invoice.id }}/xrechnung" class="btn btn-secondary">XRechnung exportieren</a>
+    {% endif %}
+    <a href="/invoices" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Rechnung</h3>
+    <dl class="space-y-2">
+      <div>
+        <dt class="text-xs text-gray-500">Kunde</dt>
+        <dd><a href="/customers/{{ invoice.customer_id }}" class="text-blue-600 text-sm">{{ invoice.customer_name }}</a></dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Rechnungsdatum</dt>
+        <dd class="text-sm text-gray-900">{{ invoice.invoice_date | format_date }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Fällig am</dt>
+        <dd class="text-sm {% if invoice.status == 'overdue' %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
+          {{ invoice.due_date | format_date }}
+        </dd>
+      </div>
+      {% if invoice.delivery_date %}
+      <div>
+        <dt class="text-xs text-gray-500">Lieferdatum</dt>
+        <dd class="text-sm text-gray-900">{{ invoice.delivery_date | format_date }}</dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-gray-500">Status</dt>
+        <dd>
+          {% if invoice.status == "paid" %}
+            <span class="badge badge-green">Bezahlt</span>
+          {% elif invoice.status == "overdue" %}
+            <span class="badge badge-red">Überfällig</span>
+          {% elif invoice.status == "sent" or invoice.status == "approved" %}
+            <span class="badge badge-blue">{{ invoice.status }}</span>
+          {% elif invoice.status == "cancelled" %}
+            <span class="badge badge-red">Storniert</span>
+          {% else %}
+            <span class="badge badge-gray">Entwurf</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Rechnungsadresse</h3>
+    <address class="text-sm text-gray-700 not-italic space-y-1">
+      <p class="font-medium">{{ invoice.customer_name }}</p>
+      {% if invoice.billing_street %}<p>{{ invoice.billing_street }}</p>{% endif %}
+      {% if invoice.billing_zip or invoice.billing_city %}<p>{{ invoice.billing_zip }} {{ invoice.billing_city }}</p>{% endif %}
+      {% if invoice.billing_country %}<p>{{ invoice.billing_country }}</p>{% endif %}
+      {% if invoice.vat_id %}<p class="mt-2 text-gray-500">USt-ID: {{ invoice.vat_id }}</p>{% endif %}
+    </address>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Aktionen</h3>
+    <div class="space-y-2">
+      {% if invoice.status == "draft" %}
+      <form method="post" action="/invoices/{{ invoice.id }}/approve">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Freigeben</button>
+      </form>
+      {% endif %}
+      {% if invoice.status == "approved" %}
+      <form method="post" action="/invoices/{{ invoice.id }}/send">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Als versandt markieren</button>
+      </form>
+      <a href="/invoices/{{ invoice.id }}/xrechnung" class="btn btn-secondary btn-sm w-full block text-center">
+        XRechnung (XML)
+      </a>
+      {% endif %}
+      {% if invoice.status == "sent" or invoice.status == "overdue" %}
+      <form method="post" action="/invoices/{{ invoice.id }}/paid">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Als bezahlt markieren</button>
+      </form>
+      {% endif %}
+      {% if invoice.status != "paid" and invoice.status != "cancelled" %}
+      <form method="post" action="/invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('Rechnung wirklich stornieren?')">
+        <button type="submit" class="btn btn-danger btn-sm w-full">Stornieren</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if invoice.intro_text %}
+<div class="card mb-4">
+  <p class="text-sm text-gray-700">{{ invoice.intro_text }}</p>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Positionen</h3>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header w-8">Pos.</th>
+          <th class="table-header">Beschreibung</th>
+          <th class="table-header text-right">Menge</th>
+          <th class="table-header">Einheit</th>
+          <th class="table-header text-right">EP</th>
+          <th class="table-header text-right">MwSt.</th>
+          <th class="table-header text-right">Gesamt</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for item in invoice.items %}
+        <tr>
+          <td class="table-cell text-gray-400">{{ loop.index }}</td>
+          <td class="table-cell text-gray-900">{{ item.description }}</td>
+          <td class="table-cell text-right font-mono text-sm">{{ item.quantity }}</td>
+          <td class="table-cell text-gray-500">{{ item.unit }}</td>
+          <td class="table-cell text-right font-mono text-sm">{{ item.unit_price | format_money }} €</td>
+          <td class="table-cell text-right text-gray-500 text-sm">{{ item.vat_rate }}%</td>
+          <td class="table-cell text-right font-mono text-sm font-medium">{{ item.line_total | format_money }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="bg-gray-50">
+          <td colspan="6" class="table-cell text-right font-semibold text-gray-700">Netto</td>
+          <td class="table-cell text-right font-mono font-semibold">{{ invoice.total_net | format_money }} €</td>
+        </tr>
+        <tr class="bg-gray-50">
+          <td colspan="6" class="table-cell text-right text-gray-700">MwSt.</td>
+          <td class="table-cell text-right font-mono">{{ (invoice.total_gross - invoice.total_net) | format_money }} €</td>
+        </tr>
+        <tr class="bg-gray-50">
+          <td colspan="6" class="table-cell text-right font-bold text-gray-900">Brutto</td>
+          <td class="table-cell text-right font-mono font-bold text-gray-900 text-base">{{ invoice.total_gross | format_money }} €</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+{% if invoice.footer_text %}
+<div class="card">
+  <p class="text-sm text-gray-700">{{ invoice.footer_text }}</p>
+</div>
+{% endif %}
+{% endblock %}

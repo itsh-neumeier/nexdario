@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Backup{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Backup & Wiederherstellung</h1>
+</div>
+
+{% if message %}
+<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-green-800">{{ message }}</p>
+</div>
+{% endif %}
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Backup erstellen</h3>
+    <form method="post" action="/backup/create">
+      <div class="space-y-3 mb-4">
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="encrypted" value="1" {% if config.backup_encrypted %}checked{% endif %} class="rounded">
+          Backup verschlüsseln (AES-256-GCM)
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">Backup jetzt erstellen</button>
+    </form>
+
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Automatisches Backup</h4>
+      <dl class="space-y-1 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-gray-500">Status</dt>
+          <dd>{% if config.backup_enabled %}<span class="badge badge-green">Aktiv</span>{% else %}<span class="badge badge-gray">Inaktiv</span>{% endif %}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-gray-500">Intervall</dt>
+          <dd class="text-gray-900">{{ config.backup_interval_hours }} Stunden</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-gray-500">Aufbewahrung</dt>
+          <dd class="text-gray-900">{{ config.backup_retention_days }} Tage</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Daten importieren</h3>
+    <form method="post" action="/backup/restore" enctype="multipart/form-data">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Backup-Datei (.gz oder .enc.gz)</label>
+          <input type="file" name="backup_file" accept=".gz" class="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium
+            file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+          <p class="text-xs text-yellow-800">
+            Achtung: Die Wiederherstellung überschreibt alle aktuellen Daten. Nur als Superadmin möglich.
+          </p>
+        </div>
+        <button type="submit" class="btn btn-danger">Wiederherstellen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Vorhandene Backups ({{ backups | length }})</h3>
+  {% if backups %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Dateiname</th>
+          <th class="table-header text-right">Größe</th>
+          <th class="table-header">Verschlüsselt</th>
+          <th class="table-header">Erstellt</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for b in backups %}
+        <tr>
+          <td class="table-cell font-mono text-xs text-gray-700">{{ b.filename }}</td>
+          <td class="table-cell text-right text-gray-500 text-sm">{{ b.size_human }}</td>
+          <td class="table-cell">
+            {% if b.encrypted %}
+              <span class="badge badge-green">Ja</span>
+            {% else %}
+              <span class="badge badge-gray">Nein</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-gray-500 text-sm">{{ b.created_at | format_date }}</td>
+          <td class="table-cell text-right space-x-2">
+            <a href="/backup/download/{{ b.filename }}" class="text-sm text-blue-600 hover:text-blue-800">Download</a>
+            <form method="post" action="/backup/delete/{{ b.filename }}" class="inline"
+              onsubmit="return confirm('Backup löschen?')">
+              <button type="submit" class="text-sm text-red-500 hover:text-red-700">Löschen</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-gray-400 py-4">Noch keine Backups vorhanden.</p>
+  {% endif %}
+</div>
+{% endblock %}

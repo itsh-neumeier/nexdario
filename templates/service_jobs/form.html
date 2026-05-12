@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{% if job %}Einsatz bearbeiten{% else %}Neuer Serviceeinsatz{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if job %}Einsatz bearbeiten{% else %}Neuer Serviceeinsatz{% endif %}</h1>
+  <a href="/service-jobs{% if job %}/{{ job.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if job %}/service-jobs/{{ job.id }}{% else %}/service-jobs{% endif %}">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Einsatzdaten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Titel <span class="text-red-500">*</span></label>
+          <input type="text" name="title" value="{{ job.title }}" required class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kunde</label>
+          <select name="customer_id" class="form-input">
+            <option value="">— Kein Kunde —</option>
+            {% for cust in customers %}
+            <option value="{{ cust.id }}" {% if job.customer_id == cust.id %}selected{% endif %}>{{ cust.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Standort</label>
+          <select name="location_id" class="form-input">
+            <option value="">— Kein Standort —</option>
+            {% for loc in locations %}
+            <option value="{{ loc.id }}" {% if job.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
+          <select name="priority" class="form-input">
+            <option value="low" {% if job.priority == "low" %}selected{% endif %}>Niedrig</option>
+            <option value="normal" {% if not job or job.priority == "normal" %}selected{% endif %}>Normal</option>
+            <option value="high" {% if job.priority == "high" %}selected{% endif %}>Hoch</option>
+            <option value="critical" {% if job.priority == "critical" %}selected{% endif %}>Kritisch</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select name="status" class="form-input">
+            <option value="open" {% if not job or job.status == "open" %}selected{% endif %}>Offen</option>
+            <option value="scheduled" {% if job.status == "scheduled" %}selected{% endif %}>Geplant</option>
+            <option value="in_progress" {% if job.status == "in_progress" %}selected{% endif %}>In Bearbeitung</option>
+            <option value="done" {% if job.status == "done" %}selected{% endif %}>Abgeschlossen</option>
+            <option value="cancelled" {% if job.status == "cancelled" %}selected{% endif %}>Abgebrochen</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Planung</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Techniker</label>
+          <select name="assigned_to" class="form-input">
+            <option value="">— Nicht zugewiesen —</option>
+            {% for emp in employees %}
+            <option value="{{ emp.id }}" {% if job.assigned_to == emp.id %}selected{% endif %}>{{ emp.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Datum</label>
+          <input type="date" name="scheduled_date" value="{{ job.scheduled_date }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Zeit</label>
+          <input type="time" name="scheduled_time" value="{{ job.scheduled_time }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Std.)</label>
+          <input type="number" name="estimated_hours" value="{{ job.estimated_hours }}" class="form-input" step="0.5" min="0">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung / Auftrag</label>
+          <textarea name="description" rows="4" class="form-input">{{ job.description }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Interne Notizen</label>
+          <textarea name="notes" rows="2" class="form-input">{{ job.notes }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/service-jobs{% if job %}/{{ job.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}

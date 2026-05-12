@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ target_user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ target_user.display_name }}</h1>
+    <span class="text-sm text-gray-500 font-mono">{{ target_user.username }}</span>
+  </div>
+  <div class="flex gap-2">
+    <a href="/users/{{ target_user.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/users" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Benutzerdaten</h3>
+    <dl class="space-y-2">
+      <div>
+        <dt class="text-xs text-gray-500">Benutzername</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ target_user.username }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Anzeigename</dt>
+        <dd class="text-sm text-gray-900">{{ target_user.display_name }}</dd>
+      </div>
+      {% if target_user.email %}
+      <div>
+        <dt class="text-xs text-gray-500">E-Mail</dt>
+        <dd class="text-sm text-gray-900">{{ target_user.email }}</dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-gray-500">Status</dt>
+        <dd>
+          {% if target_user.is_active %}
+            <span class="badge badge-green">Aktiv</span>
+          {% else %}
+            <span class="badge badge-gray">Inaktiv</span>
+          {% endif %}
+          {% if target_user.is_system %}
+            <span class="badge badge-blue ml-1">System</span>
+          {% endif %}
+        </dd>
+      </div>
+      {% if target_user.last_login_at %}
+      <div>
+        <dt class="text-xs text-gray-500">Letzter Login</dt>
+        <dd class="text-sm text-gray-500">{{ target_user.last_login_at | format_date }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <div class="card">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-semibold text-gray-900">Rollen</h3>
+      <a href="/users/{{ target_user.id }}/roles" class="btn btn-secondary btn-sm">Rollen bearbeiten</a>
+    </div>
+    {% if user_roles %}
+    <div class="space-y-2">
+      {% for role in user_roles %}
+      <div class="flex items-center justify-between py-1">
+        <span class="text-sm text-gray-900">{{ role.display_name or role.name }}</span>
+        <span class="text-xs text-gray-400">Rang {{ role.rank }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400">Keine Rollen zugewiesen.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+services:
+  nexdario:
+    build: .
+    container_name: nexdario
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - nexdario_data:/data
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:///data/nexdario.db
+      - BIND_HOST=0.0.0.0
+      - BIND_PORT=8080
+      - DATA_DIR=/data
+      - BACKUP_DIR=/data/backups
+      - EXPORT_DIR=/data/exports
+      - TEMPLATES_DIR=templates
+      - STATIC_DIR=static
+
+volumes:
+  nexdario_data:

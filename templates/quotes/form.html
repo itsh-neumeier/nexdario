@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}{% if quote %}Angebot bearbeiten{% else %}Neues Angebot{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if quote %}Angebot bearbeiten{% else %}Neues Angebot{% endif %}</h1>
+  <a href="/quotes{% if quote %}/{{ quote.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if quote %}/quotes/{{ quote.id }}{% else %}/quotes{% endif %}">
+  {% if customer_id %}<input type="hidden" name="customer_id" value="{{ customer_id }}">{% endif %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Angebotsdaten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kunde <span class="text-red-500">*</span></label>
+          <select name="customer_id" required class="form-input">
+            <option value="">— Bitte wählen —</option>
+            {% for cust in customers %}
+            <option value="{{ cust.id }}" {% if (quote.customer_id == cust.id) or (customer_id == cust.id|string) %}selected{% endif %}>
+              {{ cust.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Titel <span class="text-red-500">*</span></label>
+          <input type="text" name="title" value="{{ quote.title }}" required class="form-input" placeholder="Angebotstitel...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Gültig bis</label>
+          <input type="date" name="valid_until" value="{{ quote.valid_until }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select name="status" class="form-input">
+            <option value="draft" {% if not quote or quote.status == "draft" %}selected{% endif %}>Entwurf</option>
+            <option value="sent" {% if quote.status == "sent" %}selected{% endif %}>Versandt</option>
+            <option value="accepted" {% if quote.status == "accepted" %}selected{% endif %}>Angenommen</option>
+            <option value="rejected" {% if quote.status == "rejected" %}selected{% endif %}>Abgelehnt</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Texte</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Einleitungstext</label>
+          <textarea name="intro_text" rows="3" class="form-input">{{ quote.intro_text }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Schlusstext</label>
+          <textarea name="footer_text" rows="3" class="form-input">{{ quote.footer_text }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Interne Notizen</label>
+          <textarea name="notes" rows="2" class="form-input">{{ quote.notes }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Positionen</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full mb-3">
+        <thead>
+          <tr>
+            <th class="text-left text-xs font-medium text-gray-500 pb-2 w-8">Pos.</th>
+            <th class="text-left text-xs font-medium text-gray-500 pb-2">Beschreibung</th>
+            <th class="text-right text-xs font-medium text-gray-500 pb-2 w-20">Menge</th>
+            <th class="text-left text-xs font-medium text-gray-500 pb-2 w-16">Einheit</th>
+            <th class="text-right text-xs font-medium text-gray-500 pb-2 w-28">EP (Netto)</th>
+            <th class="text-right text-xs font-medium text-gray-500 pb-2 w-16">MwSt%</th>
+            <th class="w-8"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          {% if quote and quote.items %}
+          {% for item in quote.items %}
+          <tr class="item-row">
+            <td class="pr-2 pt-2 text-sm text-gray-400">{{ loop.index }}</td>
+            <td class="pr-2 pt-2">
+              <input type="text" name="item_description[]" value="{{ item.description }}" class="form-input text-sm" placeholder="Leistungsbeschreibung...">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="number" name="item_quantity[]" value="{{ item.quantity }}" class="form-input text-sm text-right" step="0.01" min="0">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="text" name="item_unit[]" value="{{ item.unit or 'Stk.' }}" class="form-input text-sm">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="number" name="item_unit_price[]" value="{{ item.unit_price }}" class="form-input text-sm text-right" step="0.01" min="0">
+            </td>
+            <td class="pr-2 pt-2">
+              <select name="item_vat_rate[]" class="form-input text-sm">
+                <option value="19" {% if item.vat_rate == 19 %}selected{% endif %}>19%</option>
+                <option value="7" {% if item.vat_rate == 7 %}selected{% endif %}>7%</option>
+                <option value="0" {% if item.vat_rate == 0 %}selected{% endif %}>0%</option>
+              </select>
+            </td>
+            <td class="pt-2">
+              <button type="button" class="remove-row text-red-400 hover:text-red-600">✕</button>
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr class="item-row">
+            <td class="pr-2 pt-2 text-sm text-gray-400">1</td>
+            <td class="pr-2 pt-2">
+              <input type="text" name="item_description[]" class="form-input text-sm" placeholder="Leistungsbeschreibung...">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="number" name="item_quantity[]" value="1" class="form-input text-sm text-right" step="0.01" min="0">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="text" name="item_unit[]" value="Stk." class="form-input text-sm">
+            </td>
+            <td class="pr-2 pt-2">
+              <input type="number" name="item_unit_price[]" value="0.00" class="form-input text-sm text-right" step="0.01" min="0">
+            </td>
+            <td class="pr-2 pt-2">
+              <select name="item_vat_rate[]" class="form-input text-sm">
+                <option value="19" selected>19%</option>
+                <option value="7">7%</option>
+                <option value="0">0%</option>
+              </select>
+            </td>
+            <td class="pt-2">
+              <button type="button" class="remove-row text-red-400 hover:text-red-600">✕</button>
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <button type="button" id="add-item" class="btn btn-secondary btn-sm">+ Position hinzufügen</button>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/quotes{% if quote %}/{{ quote.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+  </div>
+</form>
+
+<script>
+document.getElementById('add-item').addEventListener('click', function() {
+  const tbody = document.getElementById('items-body');
+  const rowCount = tbody.querySelectorAll('.item-row').length + 1;
+
+  const tr = document.createElement('tr');
+  tr.className = 'item-row';
+
+  function makeCell(content) {
+    const td = document.createElement('td');
+    td.className = 'pr-2 pt-2';
+    td.appendChild(content);
+    return td;
+  }
+
+  const posCell = document.createElement('td');
+  posCell.className = 'pr-2 pt-2 text-sm text-gray-400';
+  posCell.textContent = String(rowCount);
+  tr.appendChild(posCell);
+
+  const desc = document.createElement('input');
+  desc.type = 'text';
+  desc.name = 'item_description[]';
+  desc.className = 'form-input text-sm';
+  desc.placeholder = 'Leistungsbeschreibung...';
+  tr.appendChild(makeCell(desc));
+
+  const qty = document.createElement('input');
+  qty.type = 'number';
+  qty.name = 'item_quantity[]';
+  qty.value = '1';
+  qty.className = 'form-input text-sm text-right';
+  qty.step = '0.01';
+  qty.min = '0';
+  tr.appendChild(makeCell(qty));
+
+  const unit = document.createElement('input');
+  unit.type = 'text';
+  unit.name = 'item_unit[]';
+  unit.value = 'Stk.';
+  unit.className = 'form-input text-sm';
+  tr.appendChild(makeCell(unit));
+
+  const price = document.createElement('input');
+  price.type = 'number';
+  price.name = 'item_unit_price[]';
+  price.value = '0.00';
+  price.className = 'form-input text-sm text-right';
+  price.step = '0.01';
+  price.min = '0';
+  tr.appendChild(makeCell(price));
+
+  const vatSelect = document.createElement('select');
+  vatSelect.name = 'item_vat_rate[]';
+  vatSelect.className = 'form-input text-sm';
+  [['19', '19%'], ['7', '7%'], ['0', '0%']].forEach(function(opt) {
+    const o = document.createElement('option');
+    o.value = opt[0];
+    o.textContent = opt[1];
+    if (opt[0] === '19') { o.selected = true; }
+    vatSelect.appendChild(o);
+  });
+  tr.appendChild(makeCell(vatSelect));
+
+  const btnCell = document.createElement('td');
+  btnCell.className = 'pt-2';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'remove-row text-red-400 hover:text-red-600';
+  btn.textContent = '✕';
+  btnCell.appendChild(btn);
+  tr.appendChild(btnCell);
+
+  tbody.appendChild(tr);
+});
+
+document.getElementById('items-body').addEventListener('click', function(e) {
+  if (e.target.classList.contains('remove-row')) {
+    e.target.closest('tr').remove();
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{% if role %}Rolle bearbeiten{% else %}Neue Rolle{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if role %}Rolle bearbeiten: {{ role.name }}{% else %}Neue Rolle{% endif %}</h1>
+  <a href="/roles" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if role %}/roles/{{ role.id }}{% else %}/roles{% endif %}">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Rollendaten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
+          <input type="text" name="name" value="{{ role.name }}" required class="form-input"
+            {% if role and role.is_system %}readonly{% endif %}>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+          <textarea name="description" rows="3" class="form-input">{{ role.description }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rang (niedrig = mehr Rechte)</label>
+          <input type="number" name="rank" value="{{ role.rank or 100 }}" class="form-input" min="1" max="999"
+            {% if role and role.is_system %}readonly{% endif %}>
+        </div>
+        {% if role and role.is_system %}
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+          <p class="text-xs text-blue-700">Systemrolle — Name und Rang sind unveränderlich.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card lg:col-span-2">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Berechtigungen</h3>
+      {% for module, perms in permissions_by_module %}
+      <div class="mb-4">
+        <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">{{ module }}</h4>
+        <div class="grid grid-cols-2 gap-2">
+          {% for perm in perms %}
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="perm_ids" value="{{ perm.id }}"
+              {% if perm.id in role_perm_ids %}checked{% endif %} class="rounded">
+            {{ perm.display_name }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/roles" class="btn btn-secondary">Abbrechen</a>
+    {% if role and not role.is_system %}
+    <form method="post" action="/roles/{{ role.id }}/delete" class="ml-auto" onsubmit="return confirm('Rolle wirklich löschen?')">
+      <button type="submit" class="btn btn-danger">Löschen</button>
+    </form>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

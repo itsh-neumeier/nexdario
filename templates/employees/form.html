@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{% if employee %}Mitarbeiter bearbeiten{% else %}Neuer Mitarbeiter{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if employee %}Mitarbeiter bearbeiten{% else %}Neuer Mitarbeiter{% endif %}</h1>
+  <a href="/employees" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if employee %}/employees/{{ employee.id }}{% else %}/employees{% endif %}">
+  <div class="card max-w-2xl">
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Anzeigename <span class="text-red-500">*</span></label>
+        <input type="text" name="display_name" value="{{ employee.display_name }}" required class="form-input">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+          <input type="email" name="email" value="{{ employee.email }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+          <input type="tel" name="phone" value="{{ employee.phone }}" class="form-input">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Abteilung</label>
+        <input type="text" name="department" value="{{ employee.department }}" class="form-input">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Verknüpfter Benutzer</label>
+        <select name="user_id" class="form-input">
+          <option value="">— Kein Benutzer —</option>
+          {% for u in users %}
+          <option value="{{ u.id }}" {% if employee.user_id == u.id %}selected{% endif %}>{{ u.username }} ({{ u.display_name }})</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-gray-400 mt-1">Verknüpft den Mitarbeiter mit einem Login-Benutzer.</p>
+      </div>
+      {% if employee %}
+      <div>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="is_active" value="1" {% if employee.is_active %}checked{% endif %} class="rounded">
+          Mitarbeiter aktiv
+        </label>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-6 flex gap-3">
+      <button type="submit" class="btn btn-primary">Speichern</button>
+      <a href="/employees" class="btn btn-secondary">Abbrechen</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

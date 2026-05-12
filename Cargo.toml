@@ -1,0 +1,42 @@
+[package]
+name = "nexdario"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "nexdario"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["multipart", "macros"] }
+tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-native-tls", "migrate", "chrono", "uuid"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
+argon2 = { version = "0.5", features = ["std"] }
+aes-gcm = "0.10"
+sha2 = "0.10"
+rand = "0.8"
+hex = "0.4"
+base64 = "0.21"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+minijinja = { version = "2", features = ["loader", "builtins"] }
+lettre = { version = "0.11", features = ["tokio1", "tokio1-native-tls", "builder"] }
+flate2 = "1"
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+thiserror = "1"
+once_cell = "1"
+async-trait = "0.1"
+bytes = "1"
+tokio-util = { version = "0.7", features = ["io"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4

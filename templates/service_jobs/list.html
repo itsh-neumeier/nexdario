@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Serviceeinsätze{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Serviceeinsätze</h1>
+  <a href="/service-jobs/new" class="btn btn-primary">+ Neuer Einsatz</a>
+</div>
+
+<div class="card mb-4">
+  <form method="get" class="flex gap-3 items-end flex-wrap">
+    <div class="flex-1 min-w-48">
+      <input type="text" name="search" value="{{ search }}" class="form-input" placeholder="Nummer, Titel, Kunde...">
+    </div>
+    <div>
+      <select name="status" class="form-input">
+        <option value="">Alle Status</option>
+        <option value="open" {% if status == "open" %}selected{% endif %}>Offen</option>
+        <option value="scheduled" {% if status == "scheduled" %}selected{% endif %}>Geplant</option>
+        <option value="in_progress" {% if status == "in_progress" %}selected{% endif %}>In Bearbeitung</option>
+        <option value="done" {% if status == "done" %}selected{% endif %}>Abgeschlossen</option>
+        <option value="cancelled" {% if status == "cancelled" %}selected{% endif %}>Abgebrochen</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">Suchen</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Nr.</th>
+          <th class="table-header">Titel</th>
+          <th class="table-header">Kunde / Standort</th>
+          <th class="table-header">Geplant</th>
+          <th class="table-header">Techniker</th>
+          <th class="table-header">Priorität</th>
+          <th class="table-header">Status</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for j in jobs %}
+        <tr class="hover:bg-gray-50">
+          <td class="table-cell font-mono text-xs text-gray-500">{{ j.job_number }}</td>
+          <td class="table-cell">
+            <a href="/service-jobs/{{ j.id }}" class="font-medium text-blue-600 hover:text-blue-800">{{ j.title }}</a>
+          </td>
+          <td class="table-cell text-gray-600 text-sm">
+            {{ j.customer_name or "–" }}
+            {% if j.location_name %}<br><span class="text-gray-400">{{ j.location_name }}</span>{% endif %}
+          </td>
+          <td class="table-cell text-gray-500 text-sm">{{ j.scheduled_date | format_date if j.scheduled_date else "–" }}</td>
+          <td class="table-cell text-gray-600">{{ j.technician_name or "–" }}</td>
+          <td class="table-cell">
+            {% if j.priority == "critical" %}
+              <span class="badge badge-red">Kritisch</span>
+            {% elif j.priority == "high" %}
+              <span class="badge badge-yellow">Hoch</span>
+            {% elif j.priority == "low" %}
+              <span class="badge badge-gray">Niedrig</span>
+            {% else %}
+              <span class="badge badge-blue">Normal</span>
+            {% endif %}
+          </td>
+          <td class="table-cell">
+            {% if j.status == "done" %}
+              <span class="badge badge-green">Abgeschlossen</span>
+            {% elif j.status == "in_progress" %}
+              <span class="badge badge-blue">In Bearbeitung</span>
+            {% elif j.status == "scheduled" %}
+              <span class="badge badge-yellow">Geplant</span>
+            {% elif j.status == "cancelled" %}
+              <span class="badge badge-red">Abgebrochen</span>
+            {% else %}
+              <span class="badge badge-gray">Offen</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-right">
+            <a href="/service-jobs/{{ j.id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="table-cell text-center text-gray-400 py-8">Keine Serviceeinsätze gefunden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

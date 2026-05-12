@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}WAN-Verbindungen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">WAN-Verbindungen</h1>
+  <a href="/wan/new" class="btn btn-primary">+ Neue Verbindung</a>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Standort</th>
+          <th class="table-header">Provider</th>
+          <th class="table-header">Typ</th>
+          <th class="table-header">Bandbreite</th>
+          <th class="table-header">IP</th>
+          <th class="table-header">Vertrag bis</th>
+          <th class="table-header">Status</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for w in connections %}
+        <tr class="hover:bg-gray-50">
+          <td class="table-cell">
+            {% if w.location_id %}
+            <a href="/locations/{{ w.location_id }}" class="text-blue-600">{{ w.location_name }}</a>
+            {% else %}–{% endif %}
+          </td>
+          <td class="table-cell font-medium text-gray-900">{{ w.provider }}</td>
+          <td class="table-cell text-gray-500">{{ w.connection_type }}</td>
+          <td class="table-cell text-gray-600 font-mono text-sm">{{ w.download_mbps }}↓ / {{ w.upload_mbps }}↑</td>
+          <td class="table-cell font-mono text-xs text-gray-500">{{ w.ip_address or "DHCP" }}</td>
+          <td class="table-cell text-gray-500 text-sm">{{ w.contract_end | format_date if w.contract_end else "–" }}</td>
+          <td class="table-cell">
+            {% if w.status == "active" %}
+              <span class="badge badge-green">Aktiv</span>
+            {% elif w.status == "backup" %}
+              <span class="badge badge-yellow">Backup</span>
+            {% else %}
+              <span class="badge badge-gray">{{ w.status }}</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-right">
+            <a href="/wan/{{ w.id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="table-cell text-center text-gray-400 py-8">Keine WAN-Verbindungen gefunden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.job_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ job.title }}</h1>
+    <span class="text-sm text-gray-500 font-mono">{{ job.job_number }}</span>
+  </div>
+  <div class="flex gap-2">
+    <a href="/service-jobs/{{ job.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/service-jobs" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Details</h3>
+    <dl class="space-y-2">
+      {% if job.customer_id %}
+      <div>
+        <dt class="text-xs text-gray-500">Kunde</dt>
+        <dd><a href="/customers/{{ job.customer_id }}" class="text-blue-600 text-sm">{{ job.customer_name }}</a></dd>
+      </div>
+      {% endif %}
+      {% if job.location_id %}
+      <div>
+        <dt class="text-xs text-gray-500">Standort</dt>
+        <dd><a href="/locations/{{ job.location_id }}" class="text-blue-600 text-sm">{{ job.location_name }}</a></dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-gray-500">Priorität</dt>
+        <dd>
+          {% if job.priority == "critical" %}<span class="badge badge-red">Kritisch</span>
+          {% elif job.priority == "high" %}<span class="badge badge-yellow">Hoch</span>
+          {% elif job.priority == "low" %}<span class="badge badge-gray">Niedrig</span>
+          {% else %}<span class="badge badge-blue">Normal</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Status</dt>
+        <dd>
+          {% if job.status == "done" %}<span class="badge badge-green">Abgeschlossen</span>
+          {% elif job.status == "in_progress" %}<span class="badge badge-blue">In Bearbeitung</span>
+          {% elif job.status == "scheduled" %}<span class="badge badge-yellow">Geplant</span>
+          {% elif job.status == "cancelled" %}<span class="badge badge-red">Abgebrochen</span>
+          {% else %}<span class="badge badge-gray">Offen</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Planung</h3>
+    <dl class="space-y-2">
+      <div>
+        <dt class="text-xs text-gray-500">Techniker</dt>
+        <dd class="text-sm text-gray-900">{{ job.technician_name or "Nicht zugewiesen" }}</dd>
+      </div>
+      {% if job.scheduled_date %}
+      <div>
+        <dt class="text-xs text-gray-500">Geplant</dt>
+        <dd class="text-sm text-gray-900">{{ job.scheduled_date | format_date }}{% if job.scheduled_time %} {{ job.scheduled_time }}{% endif %}</dd>
+      </div>
+      {% endif %}
+      {% if job.estimated_hours %}
+      <div>
+        <dt class="text-xs text-gray-500">Geplant (Std.)</dt>
+        <dd class="text-sm text-gray-900">{{ job.estimated_hours }} h</dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-gray-500">Tatsächlich (Std.)</dt>
+        <dd class="text-sm font-bold text-gray-900">{{ job.actual_hours or 0 }} h</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Aktionen</h3>
+    <div class="space-y-2">
+      {% if job.status == "open" or job.status == "scheduled" %}
+      <form method="post" action="/service-jobs/{{ job.id }}/start">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Einsatz starten</button>
+      </form>
+      {% endif %}
+      {% if job.status == "in_progress" %}
+      <form method="post" action="/service-jobs/{{ job.id }}/complete">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Abschließen</button>
+      </form>
+      {% endif %}
+      <a href="/service-jobs/{{ job.id }}/time" class="btn btn-secondary btn-sm w-full block text-center">
+        Zeit erfassen
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if job.description %}
+<div class="card mb-4">
+  <h3 class="text-lg font-semibold text-gray-900 mb-2">Auftragsbeschreibung</h3>
+  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ job.description }}</p>
+</div>
+{% endif %}
+
+{% if time_entries %}
+<div class="card mb-4">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Zeiterfassung</h3>
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead>
+      <tr>
+        <th class="table-header">Datum</th>
+        <th class="table-header">Techniker</th>
+        <th class="table-header text-right">Stunden</th>
+        <th class="table-header">Notiz</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% for entry in time_entries %}
+      <tr>
+        <td class="table-cell text-gray-500 text-sm">{{ entry.date | format_date }}</td>
+        <td class="table-cell text-gray-700">{{ entry.technician_name }}</td>
+        <td class="table-cell text-right font-mono text-sm">{{ entry.hours }} h</td>
+        <td class="table-cell text-gray-500 text-sm">{{ entry.notes or "–" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if job.notes %}
+<div class="card">
+  <h3 class="text-lg font-semibold text-gray-900 mb-2">Interne Notizen</h3>
+  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ job.notes }}</p>
+</div>
+{% endif %}
+{% endblock %}

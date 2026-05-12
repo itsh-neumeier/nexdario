@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Rollen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Rollen</h1>
+  <a href="/roles/new" class="btn btn-primary">+ Neue Rolle</a>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Name</th>
+          <th class="table-header">Beschreibung</th>
+          <th class="table-header">Rang</th>
+          <th class="table-header">Berechtigungen</th>
+          <th class="table-header">Typ</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for r in roles %}
+        <tr class="hover:bg-gray-50">
+          <td class="table-cell font-medium text-gray-900">{{ r.name }}</td>
+          <td class="table-cell text-gray-500">{{ r.description or "–" }}</td>
+          <td class="table-cell text-gray-500">{{ r.rank }}</td>
+          <td class="table-cell text-gray-500">{{ r.perm_count or 0 }}</td>
+          <td class="table-cell">
+            {% if r.is_system %}
+            <span class="badge badge-blue">System</span>
+            {% else %}
+            <span class="badge badge-gray">Benutzerdefiniert</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-right">
+            <a href="/roles/{{ r.id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="table-cell text-center text-gray-400 py-8">Keine Rollen gefunden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

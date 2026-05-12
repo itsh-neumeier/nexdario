@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ employee.first_name }} {{ employee.last_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ employee.first_name }} {{ employee.last_name }}</h1>
+    {% if employee.position %}<span class="text-sm text-gray-500">{{ employee.position }}</span>{% endif %}
+  </div>
+  <div class="flex gap-2">
+    <a href="/employees/{{ employee.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/employees" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="card max-w-lg">
+  <dl class="space-y-3">
+    {% if employee.employee_number %}
+    <div>
+      <dt class="text-xs text-gray-500">Mitarbeiternr.</dt>
+      <dd class="text-sm font-mono text-gray-900">{{ employee.employee_number }}</dd>
+    </div>
+    {% endif %}
+    {% if employee.department %}
+    <div>
+      <dt class="text-xs text-gray-500">Abteilung</dt>
+      <dd class="text-sm text-gray-900">{{ employee.department }}</dd>
+    </div>
+    {% endif %}
+    {% if employee.email %}
+    <div>
+      <dt class="text-xs text-gray-500">E-Mail</dt>
+      <dd class="text-sm"><a href="mailto:{{ employee.email }}" class="text-blue-600">{{ employee.email }}</a></dd>
+    </div>
+    {% endif %}
+    {% if employee.phone %}
+    <div>
+      <dt class="text-xs text-gray-500">Telefon</dt>
+      <dd class="text-sm"><a href="tel:{{ employee.phone }}" class="text-blue-600">{{ employee.phone }}</a></dd>
+    </div>
+    {% endif %}
+    <div>
+      <dt class="text-xs text-gray-500">Status</dt>
+      <dd>
+        {% if employee.is_active %}
+          <span class="badge badge-green">Aktiv</span>
+        {% else %}
+          <span class="badge badge-gray">Inaktiv</span>
+        {% endif %}
+      </dd>
+    </div>
+    {% if employee.qualifications %}
+    <div>
+      <dt class="text-xs text-gray-500">Qualifikationen</dt>
+      <dd class="text-sm text-gray-700">{{ employee.qualifications }}</dd>
+    </div>
+    {% endif %}
+  </dl>
+</div>
+
+<div class="mt-4 flex gap-2">
+  <form method="post" action="/employees/{{ employee.id }}/delete" onsubmit="return confirm('Mitarbeiter wirklich deaktivieren?')">
+    <button type="submit" class="btn btn-danger btn-sm">Deaktivieren</button>
+  </form>
+</div>
+{% endblock %}

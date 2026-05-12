@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Ansprechpartner{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Ansprechpartner</h1>
+  <a href="/contacts/new" class="btn btn-primary">+ Neuer Ansprechpartner</a>
+</div>
+
+<div class="card mb-4">
+  <form method="get" class="flex gap-3 items-end flex-wrap">
+    <div class="flex-1 min-w-48">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Suche</label>
+      <input type="text" name="search" value="{{ search }}" class="form-input" placeholder="Name oder E-Mail...">
+    </div>
+    <button type="submit" class="btn btn-secondary">Suchen</button>
+    <a href="/contacts" class="btn btn-secondary">Zurücksetzen</a>
+  </form>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Name</th>
+          <th class="table-header">Kunde</th>
+          <th class="table-header">Position</th>
+          <th class="table-header">Telefon</th>
+          <th class="table-header">E-Mail</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for c in contacts %}
+        <tr class="hover:bg-gray-50">
+          <td class="table-cell">
+            <a href="/contacts/{{ c.id }}" class="font-medium text-blue-600 hover:text-blue-800">
+              {{ c.first_name }} {{ c.last_name }}
+            </a>
+          </td>
+          <td class="table-cell text-gray-600">
+            {% if c.customer_id %}
+            <a href="/customers/{{ c.customer_id }}" class="text-blue-600 hover:text-blue-800">{{ c.customer_name }}</a>
+            {% else %}–{% endif %}
+          </td>
+          <td class="table-cell text-gray-500">{{ c.position or "–" }}</td>
+          <td class="table-cell text-gray-600">{{ c.phone or "–" }}</td>
+          <td class="table-cell text-gray-600">{{ c.email or "–" }}</td>
+          <td class="table-cell text-right">
+            <a href="/contacts/{{ c.id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="table-cell text-center text-gray-400 py-8">Keine Ansprechpartner gefunden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

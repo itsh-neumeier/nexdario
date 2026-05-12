@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ change.change_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ change.title }}</h1>
+    <span class="text-sm text-gray-500 font-mono">{{ change.change_number }}</span>
+  </div>
+  <div class="flex gap-2">
+    {% if change.status == "draft" or change.status == "pending" %}
+    <a href="/changes/{{ change.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    {% endif %}
+    <a href="/changes" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Details</h3>
+    <dl class="space-y-2">
+      <div>
+        <dt class="text-xs text-gray-500">Kategorie</dt>
+        <dd class="text-sm text-gray-900">{{ change.category or "–" }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Risiko</dt>
+        <dd>
+          {% if change.risk_level == "critical" %}<span class="badge badge-red">Kritisch</span>
+          {% elif change.risk_level == "high" %}<span class="badge badge-yellow">Hoch</span>
+          {% elif change.risk_level == "low" %}<span class="badge badge-gray">Niedrig</span>
+          {% else %}<span class="badge badge-blue">Mittel</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Status</dt>
+        <dd>
+          {% if change.status == "approved" %}<span class="badge badge-green">Genehmigt</span>
+          {% elif change.status == "in_progress" %}<span class="badge badge-blue">In Durchführung</span>
+          {% elif change.status == "done" %}<span class="badge badge-green">Abgeschlossen</span>
+          {% elif change.status == "cancelled" %}<span class="badge badge-red">Abgebrochen</span>
+          {% elif change.status == "pending" %}<span class="badge badge-yellow">Ausstehend</span>
+          {% else %}<span class="badge badge-gray">Entwurf</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">Ersteller</dt>
+        <dd class="text-sm text-gray-900">{{ change.creator_name or "–" }}</dd>
+      </div>
+      {% if change.approver_name %}
+      <div>
+        <dt class="text-xs text-gray-500">Genehmigt von</dt>
+        <dd class="text-sm text-gray-900">{{ change.approver_name }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Zeitplan</h3>
+    <dl class="space-y-2">
+      {% if change.planned_date %}
+      <div>
+        <dt class="text-xs text-gray-500">Geplant</dt>
+        <dd class="text-sm text-gray-900">{{ change.planned_date | format_date }}{% if change.planned_time %} {{ change.planned_time }}{% endif %}</dd>
+      </div>
+      {% endif %}
+      {% if change.estimated_duration %}
+      <div>
+        <dt class="text-xs text-gray-500">Dauer (geplant)</dt>
+        <dd class="text-sm text-gray-900">{{ change.estimated_duration }} Std.</dd>
+      </div>
+      {% endif %}
+      {% if change.affected_systems %}
+      <div>
+        <dt class="text-xs text-gray-500">Betroffene Systeme</dt>
+        <dd class="text-sm text-gray-700 whitespace-pre-wrap">{{ change.affected_systems }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Aktionen</h3>
+    <div class="space-y-2">
+      {% if change.status == "draft" %}
+      <form method="post" action="/changes/{{ change.id }}/submit">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Zur Genehmigung einreichen</button>
+      </form>
+      {% endif %}
+      {% if change.status == "pending" %}
+      <form method="post" action="/changes/{{ change.id }}/approve">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Genehmigen</button>
+      </form>
+      <form method="post" action="/changes/{{ change.id }}/reject">
+        <button type="submit" class="btn btn-danger btn-sm w-full">Ablehnen</button>
+      </form>
+      {% endif %}
+      {% if change.status == "approved" %}
+      <form method="post" action="/changes/{{ change.id }}/start">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Durchführung starten</button>
+      </form>
+      {% endif %}
+      {% if change.status == "in_progress" %}
+      <form method="post" action="/changes/{{ change.id }}/close">
+        <button type="submit" class="btn btn-primary btn-sm w-full">Abschließen</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if change.description %}
+<div class="card mb-4">
+  <h3 class="text-lg font-semibold text-gray-900 mb-2">Beschreibung</h3>
+  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ change.description }}</p>
+</div>
+{% endif %}
+
+{% if change.test_plan or change.rollback_plan %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+  {% if change.test_plan %}
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Testplan</h3>
+    <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ change.test_plan }}</p>
+  </div>
+  {% endif %}
+  {% if change.rollback_plan %}
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Rollback-Plan</h3>
+    <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ change.rollback_plan }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

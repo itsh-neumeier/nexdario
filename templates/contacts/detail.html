@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.first_name }} {{ contact.last_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ contact.first_name }} {{ contact.last_name }}</h1>
+    {% if contact.position %}<span class="text-sm text-gray-500">{{ contact.position }}</span>{% endif %}
+  </div>
+  <div class="flex gap-2">
+    <a href="/contacts/{{ contact.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/contacts" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Details</h3>
+    <dl class="space-y-2">
+      {% if contact.customer_name %}
+      <div>
+        <dt class="text-xs text-gray-500">Kunde</dt>
+        <dd><a href="/customers/{{ contact.customer_id }}" class="text-blue-600 text-sm">{{ contact.customer_name }}</a></dd>
+      </div>
+      {% endif %}
+      {% if contact.department %}
+      <div>
+        <dt class="text-xs text-gray-500">Abteilung</dt>
+        <dd class="text-sm text-gray-900">{{ contact.department }}</dd>
+      </div>
+      {% endif %}
+      {% if contact.phone %}
+      <div>
+        <dt class="text-xs text-gray-500">Telefon</dt>
+        <dd class="text-sm"><a href="tel:{{ contact.phone }}" class="text-blue-600">{{ contact.phone }}</a></dd>
+      </div>
+      {% endif %}
+      {% if contact.mobile %}
+      <div>
+        <dt class="text-xs text-gray-500">Mobil</dt>
+        <dd class="text-sm"><a href="tel:{{ contact.mobile }}" class="text-blue-600">{{ contact.mobile }}</a></dd>
+      </div>
+      {% endif %}
+      {% if contact.email %}
+      <div>
+        <dt class="text-xs text-gray-500">E-Mail</dt>
+        <dd class="text-sm"><a href="mailto:{{ contact.email }}" class="text-blue-600">{{ contact.email }}</a></dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Flags</h3>
+    <div class="grid grid-cols-2 gap-2">
+      {% if contact.is_primary %}
+      <span class="badge badge-blue">Hauptkontakt</span>
+      {% endif %}
+      {% if contact.receives_invoices %}
+      <span class="badge badge-green">Erhält Rechnungen</span>
+      {% endif %}
+      {% if contact.receives_reports %}
+      <span class="badge badge-green">Erhält Berichte</span>
+      {% endif %}
+      {% if contact.emergency_contact %}
+      <span class="badge badge-red">Notfallkontakt</span>
+      {% endif %}
+    </div>
+
+    {% if can_see_notes and contact.notes %}
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <p class="text-xs text-gray-500 mb-1">Interne Notizen</p>
+      <p class="text-sm text-gray-700">{{ contact.notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="mt-4 flex gap-2">
+  <form method="post" action="/contacts/{{ contact.id }}/delete" onsubmit="return confirm('Ansprechpartner wirklich löschen?')">
+    <button type="submit" class="btn btn-danger btn-sm">Löschen</button>
+  </form>
+</div>
+{% endblock %}

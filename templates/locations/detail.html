@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}{{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ location.name }}</h1>
+    <div class="flex items-center gap-3 mt-1">
+      <span class="font-mono text-lg text-blue-700 font-bold">{{ location.site_code }}</span>
+      {% if location.customer_name %}
+      <span class="text-sm text-gray-500">→ <a href="/customers/{{ location.customer_id }}" class="text-blue-600">{{ location.customer_name }}</a></span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="flex gap-2">
+    <a href="/locations/{{ location.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/locations" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Adresse</h3>
+    <address class="text-sm text-gray-700 not-italic space-y-1">
+      {% if location.street %}<p>{{ location.street }} {{ location.house_number }}</p>{% endif %}
+      {% if location.zip or location.city %}<p>{{ location.zip }} {{ location.city }}</p>{% endif %}
+      {% if location.state %}<p>{{ location.state }}</p>{% endif %}
+      {% if location.country %}<p>{{ location.country }}</p>{% endif %}
+    </address>
+    {% if location.floor %}
+    <p class="text-sm text-gray-500 mt-2">Etage: {{ location.floor }}</p>
+    {% endif %}
+    {% if location.opening_hours %}
+    <p class="text-sm text-gray-500 mt-1">{{ location.opening_hours }}</p>
+    {% endif %}
+    {% if location.access_info %}
+    <div class="mt-3 pt-3 border-t border-gray-100">
+      <p class="text-xs text-gray-500 mb-1">Anfahrt</p>
+      <p class="text-sm text-gray-700">{{ location.access_info }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Netzwerk</h3>
+    <dl class="space-y-2">
+      {% if location.network_range %}
+      <div>
+        <dt class="text-xs text-gray-500">Subnetz</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ location.network_range }}</dd>
+      </div>
+      {% endif %}
+      {% if location.vlan_ids %}
+      <div>
+        <dt class="text-xs text-gray-500">VLANs</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ location.vlan_ids }}</dd>
+      </div>
+      {% endif %}
+      {% if location.dns_servers %}
+      <div>
+        <dt class="text-xs text-gray-500">DNS</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ location.dns_servers }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Übersicht</h3>
+    <dl class="space-y-2">
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-500">Typ</dt>
+        <dd class="text-sm text-gray-900">{{ location.location_type or "–" }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-500">Assets</dt>
+        <dd class="text-sm font-bold text-gray-900">{{ assets | length }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-500">WAN-Verbindungen</dt>
+        <dd class="text-sm font-bold text-gray-900">{{ wan_connections | length }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-500">Ansprechpartner</dt>
+        <dd class="text-sm font-bold text-gray-900">{{ contacts | length }}</dd>
+      </div>
+    </dl>
+    {% if location.notes %}
+    <div class="mt-3 pt-3 border-t border-gray-100">
+      <p class="text-xs text-gray-500 mb-1">Notizen</p>
+      <p class="text-sm text-gray-700">{{ location.notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Assets -->
+<div class="card mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">Assets ({{ assets | length }})</h3>
+    <a href="/assets/new?location_id={{ location.id }}" class="btn btn-secondary btn-sm">+ Asset hinzufügen</a>
+  </div>
+  {% if assets %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Hostname</th>
+          <th class="table-header">Typ</th>
+          <th class="table-header">Hersteller/Modell</th>
+          <th class="table-header">IP</th>
+          <th class="table-header">Status</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for asset in assets %}
+        <tr>
+          <td class="table-cell font-mono text-sm">
+            <a href="/assets/{{ asset.id }}" class="text-blue-600">{{ asset.hostname }}</a>
+          </td>
+          <td class="table-cell text-gray-500">{{ asset.asset_type }}</td>
+          <td class="table-cell text-gray-600">{{ asset.manufacturer }} {{ asset.model }}</td>
+          <td class="table-cell font-mono text-xs text-gray-500">{{ asset.ip_address or "–" }}</td>
+          <td class="table-cell">
+            {% if asset.status == "active" %}
+              <span class="badge badge-green">Aktiv</span>
+            {% else %}
+              <span class="badge badge-gray">{{ asset.status }}</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-right">
+            <a href="/assets/{{ asset.id }}/edit" class="text-sm text-blue-600">Bearbeiten</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-gray-400 py-4">Noch keine Assets an diesem Standort.</p>
+  {% endif %}
+</div>
+
+<!-- WAN -->
+<div class="card mb-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">WAN-Verbindungen ({{ wan_connections | length }})</h3>
+    <a href="/wan/new?location_id={{ location.id }}" class="btn btn-secondary btn-sm">+ Verbindung hinzufügen</a>
+  </div>
+  {% if wan_connections %}
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead>
+      <tr>
+        <th class="table-header">Provider</th>
+        <th class="table-header">Typ</th>
+        <th class="table-header">Bandbreite</th>
+        <th class="table-header">IP</th>
+        <th class="table-header">Status</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% for wan in wan_connections %}
+      <tr>
+        <td class="table-cell text-gray-900">{{ wan.provider }}</td>
+        <td class="table-cell text-gray-500">{{ wan.connection_type }}</td>
+        <td class="table-cell text-gray-600">{{ wan.download_mbps }}↓ / {{ wan.upload_mbps }}↑ Mbit/s</td>
+        <td class="table-cell font-mono text-xs text-gray-500">{{ wan.ip_address or "DHCP" }}</td>
+        <td class="table-cell">
+          {% if wan.status == "active" %}
+            <span class="badge badge-green">Aktiv</span>
+          {% else %}
+            <span class="badge badge-gray">{{ wan.status }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-sm text-gray-400 py-4">Keine WAN-Verbindungen hinterlegt.</p>
+  {% endif %}
+</div>
+
+<!-- Recent Jobs -->
+{% if recent_jobs %}
+<div class="card mb-6">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Letzte Serviceeinsätze</h3>
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead>
+      <tr>
+        <th class="table-header">Nr.</th>
+        <th class="table-header">Titel</th>
+        <th class="table-header">Datum</th>
+        <th class="table-header">Techniker</th>
+        <th class="table-header">Status</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% for job in recent_jobs %}
+      <tr>
+        <td class="table-cell font-mono text-xs text-gray-500">{{ job.job_number }}</td>
+        <td class="table-cell">
+          <a href="/service-jobs/{{ job.id }}" class="text-blue-600">{{ job.title }}</a>
+        </td>
+        <td class="table-cell text-gray-500 text-sm">{{ job.scheduled_date | format_date }}</td>
+        <td class="table-cell text-gray-600">{{ job.technician_name or "–" }}</td>
+        <td class="table-cell"><span class="badge badge-gray">{{ job.status }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="mt-4 flex gap-2">
+  <form method="post" action="/locations/{{ location.id }}/delete" onsubmit="return confirm('Standort wirklich löschen?')">
+    <button type="submit" class="btn btn-danger btn-sm">Löschen</button>
+  </form>
+</div>
+{% endblock %}

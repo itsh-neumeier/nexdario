@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ role.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ role.display_name or role.name }}</h1>
+    <span class="text-sm text-gray-500">Rang {{ role.rank }}</span>
+  </div>
+  <div class="flex gap-2">
+    <a href="/roles/{{ role.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
+    <a href="/roles" class="btn btn-secondary">← Liste</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Rolle</h3>
+    <dl class="space-y-2">
+      <div>
+        <dt class="text-xs text-gray-500">Name</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ role.name }}</dd>
+      </div>
+      {% if role.description %}
+      <div>
+        <dt class="text-xs text-gray-500">Beschreibung</dt>
+        <dd class="text-sm text-gray-700">{{ role.description }}</dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-gray-500">Typ</dt>
+        <dd>
+          {% if role.is_system %}
+            <span class="badge badge-blue">Systemrolle</span>
+          {% else %}
+            <span class="badge badge-gray">Benutzerdefiniert</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-gray-500">API-Zugriff</dt>
+        <dd class="text-sm text-gray-900">{% if role.allow_api_access %}Ja{% else %}Nein{% endif %}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Benutzer mit dieser Rolle</h3>
+    {% if users %}
+    <div class="space-y-1">
+      {% for u in users %}
+      <div class="flex items-center gap-2 text-sm">
+        <a href="/users/{{ u.id }}" class="text-blue-600 hover:text-blue-800">{{ u.display_name }}</a>
+        <span class="text-gray-400 font-mono text-xs">{{ u.username }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400">Kein Benutzer hat diese Rolle.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Berechtigungen</h3>
+  {% for module, perms in permissions_by_module %}
+  <div class="mb-4">
+    <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">{{ module }}</h4>
+    <div class="grid grid-cols-2 gap-1">
+      {% for perm in perms %}
+      <div class="flex items-center gap-2 text-sm {% if perm.has %}text-gray-900{% else %}text-gray-300{% endif %}">
+        {% if perm.has %}
+        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        {% else %}
+        <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        {% endif %}
+        {{ perm.display_name }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

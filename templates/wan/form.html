@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{% if wan %}WAN bearbeiten{% else %}Neue WAN-Verbindung{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if wan %}WAN-Verbindung bearbeiten{% else %}Neue WAN-Verbindung{% endif %}</h1>
+  <a href="/wan" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if wan %}/wan/{{ wan.id }}{% else %}/wan{% endif %}">
+  {% if location_id %}<input type="hidden" name="location_id" value="{{ location_id }}">{% endif %}
+  <div class="card max-w-2xl">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Standort</label>
+        <select name="location_id" class="form-input">
+          <option value="">— Kein Standort —</option>
+          {% for loc in locations %}
+          <option value="{{ loc.id }}" {% if (wan.location_id == loc.id) or (location_id == loc.id|string) %}selected{% endif %}>
+            [{{ loc.site_code }}] {{ loc.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Provider <span class="text-red-500">*</span></label>
+        <input type="text" name="provider" value="{{ wan.provider }}" required class="form-input" placeholder="Telekom, Vodafone...">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Verbindungstyp</label>
+        <select name="connection_type" class="form-input">
+          <option value="fiber" {% if wan.connection_type == "fiber" %}selected{% endif %}>Glasfaser</option>
+          <option value="dsl" {% if wan.connection_type == "dsl" %}selected{% endif %}>DSL</option>
+          <option value="cable" {% if wan.connection_type == "cable" %}selected{% endif %}>Kabel</option>
+          <option value="lte" {% if wan.connection_type == "lte" %}selected{% endif %}>LTE/5G</option>
+          <option value="sdwan" {% if wan.connection_type == "sdwan" %}selected{% endif %}>SD-WAN</option>
+          <option value="mpls" {% if wan.connection_type == "mpls" %}selected{% endif %}>MPLS</option>
+          <option value="other" {% if wan.connection_type == "other" %}selected{% endif %}>Sonstiges</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Download (Mbit/s)</label>
+        <input type="number" name="download_mbps" value="{{ wan.download_mbps }}" class="form-input" min="0">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Upload (Mbit/s)</label>
+        <input type="number" name="upload_mbps" value="{{ wan.upload_mbps }}" class="form-input" min="0">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">IP-Adresse</label>
+        <input type="text" name="ip_address" value="{{ wan.ip_address }}" class="form-input font-mono" placeholder="DHCP oder statisch">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Gateway</label>
+        <input type="text" name="gateway" value="{{ wan.gateway }}" class="form-input font-mono">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vertragsnummer</label>
+        <input type="text" name="contract_number" value="{{ wan.contract_number }}" class="form-input font-mono">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vertragsende</label>
+        <input type="date" name="contract_end" value="{{ wan.contract_end }}" class="form-input">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="status" class="form-input">
+          <option value="active" {% if not wan or wan.status == "active" %}selected{% endif %}>Aktiv (primär)</option>
+          <option value="backup" {% if wan.status == "backup" %}selected{% endif %}>Backup</option>
+          <option value="inactive" {% if wan.status == "inactive" %}selected{% endif %}>Inaktiv</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Monatliche Kosten (€)</label>
+        <input type="number" name="monthly_cost" value="{{ wan.monthly_cost }}" class="form-input" step="0.01" min="0">
+      </div>
+      <div class="col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+        <textarea name="notes" rows="2" class="form-input">{{ wan.notes }}</textarea>
+      </div>
+    </div>
+
+    <div class="mt-6 flex gap-3">
+      <button type="submit" class="btn btn-primary">Speichern</button>
+      <a href="/wan" class="btn btn-secondary">Abbrechen</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

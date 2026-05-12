@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Dashboard</h1>
+  <span class="text-sm text-gray-500">Willkommen, {{ user.display_name }}</span>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="card">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-blue-100 rounded-lg">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.customers }}</p>
+        <p class="text-sm text-gray-500">Kunden</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-green-100 rounded-lg">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.locations }}</p>
+        <p class="text-sm text-gray-500">Standorte</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-purple-100 rounded-lg">
+        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"></path></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.assets }}</p>
+        <p class="text-sm text-gray-500">Assets</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-orange-100 rounded-lg">
+        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.open_jobs }}</p>
+        <p class="text-sm text-gray-500">Offene Einsätze</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Cards -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  <!-- Changes & Quotes -->
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aktivitäten</h3>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-600">Offene Changes</span>
+        <a href="/changes" class="badge badge-yellow">{{ stats.open_changes }}</a>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-600">Offene Angebote</span>
+        <a href="/quotes" class="badge badge-blue">{{ stats.open_quotes }}</a>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-600">Offene Rechnungen</span>
+        <a href="/invoices" class="badge badge-gray">{{ stats.open_invoices }}</a>
+      </div>
+      {% if stats.overdue_invoices > 0 %}
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-red-600 font-medium">Überfällige Rechnungen</span>
+        <a href="/invoices" class="badge badge-red">{{ stats.overdue_invoices }}</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Backup Status -->
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Backup-Status</h3>
+    {% if last_backup %}
+    <div class="flex items-center gap-2 text-green-600 mb-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <span class="text-sm font-medium">Letztes Backup</span>
+    </div>
+    <p class="text-sm text-gray-600">{{ last_backup | format_date }}</p>
+    {% else %}
+    <div class="flex items-center gap-2 text-yellow-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      <span class="text-sm font-medium">Kein Backup vorhanden</span>
+    </div>
+    <p class="text-sm text-gray-500 mt-1">Erstellen Sie jetzt ein Backup.</p>
+    {% endif %}
+    <a href="/backup" class="btn btn-secondary btn-sm mt-3">Backup verwalten</a>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Schnellaktionen</h3>
+    <div class="space-y-2">
+      <a href="/customers/new" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Neuer Kunde
+      </a>
+      <a href="/locations/new" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Neuer Standort
+      </a>
+      <a href="/assets/new" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Neues Asset
+      </a>
+      <a href="/service-jobs/new" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Neuer Serviceeinsatz
+      </a>
+      <a href="/quotes/new" class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Neues Angebot
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+{% if recent_events %}
+<div class="card">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Letzte Aktivitäten</h3>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Aktion</th>
+          <th class="table-header">Ressource</th>
+          <th class="table-header">Benutzer</th>
+          <th class="table-header">Zeitpunkt</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for event in recent_events %}
+        <tr>
+          <td class="table-cell font-mono text-xs text-blue-700">{{ event.action }}</td>
+          <td class="table-cell text-gray-600">{{ event.resource_type }} {% if event.resource_id %}#{{ event.resource_id }}{% endif %}</td>
+          <td class="table-cell text-gray-600">{{ event.username or "System" }}</td>
+          <td class="table-cell text-gray-500 text-xs">{{ event.created_at | format_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

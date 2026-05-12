@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Angebote{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Angebote</h1>
+  <a href="/quotes/new" class="btn btn-primary">+ Neues Angebot</a>
+</div>
+
+<div class="card mb-4">
+  <form method="get" class="flex gap-3 items-end flex-wrap">
+    <div class="flex-1 min-w-48">
+      <input type="text" name="search" value="{{ search }}" class="form-input" placeholder="Nummer, Titel, Kunde...">
+    </div>
+    <div>
+      <select name="status" class="form-input">
+        <option value="">Alle Status</option>
+        <option value="draft" {% if status == "draft" %}selected{% endif %}>Entwurf</option>
+        <option value="sent" {% if status == "sent" %}selected{% endif %}>Versandt</option>
+        <option value="accepted" {% if status == "accepted" %}selected{% endif %}>Angenommen</option>
+        <option value="rejected" {% if status == "rejected" %}selected{% endif %}>Abgelehnt</option>
+        <option value="expired" {% if status == "expired" %}selected{% endif %}>Abgelaufen</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">Suchen</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th class="table-header">Nr.</th>
+          <th class="table-header">Titel</th>
+          <th class="table-header">Kunde</th>
+          <th class="table-header">Datum</th>
+          <th class="table-header">Gültig bis</th>
+          <th class="table-header">Netto</th>
+          <th class="table-header">Brutto</th>
+          <th class="table-header">Status</th>
+          <th class="table-header"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for q in quotes %}
+        <tr class="hover:bg-gray-50">
+          <td class="table-cell font-mono text-xs text-gray-500">{{ q.quote_number }}</td>
+          <td class="table-cell">
+            <a href="/quotes/{{ q.id }}" class="font-medium text-blue-600 hover:text-blue-800">{{ q.title }}</a>
+          </td>
+          <td class="table-cell text-gray-600">{{ q.customer_name }}</td>
+          <td class="table-cell text-gray-500 text-sm">{{ q.created_at | format_date }}</td>
+          <td class="table-cell text-gray-500 text-sm">{{ q.valid_until | format_date if q.valid_until else "–" }}</td>
+          <td class="table-cell text-right font-mono text-sm">{{ q.total_net | format_money }} €</td>
+          <td class="table-cell text-right font-mono text-sm font-medium">{{ q.total_gross | format_money }} €</td>
+          <td class="table-cell">
+            {% if q.status == "accepted" %}
+              <span class="badge badge-green">Angenommen</span>
+            {% elif q.status == "sent" %}
+              <span class="badge badge-blue">Versandt</span>
+            {% elif q.status == "rejected" %}
+              <span class="badge badge-red">Abgelehnt</span>
+            {% elif q.status == "expired" %}
+              <span class="badge badge-red">Abgelaufen</span>
+            {% else %}
+              <span class="badge badge-gray">Entwurf</span>
+            {% endif %}
+          </td>
+          <td class="table-cell text-right">
+            <a href="/quotes/{{ q.id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="table-cell text-center text-gray-400 py-8">Keine Angebote gefunden.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{% if contact %}Ansprechpartner bearbeiten{% else %}Neuer Ansprechpartner{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if contact %}Ansprechpartner bearbeiten{% else %}Neuer Ansprechpartner{% endif %}</h1>
+  <a href="/contacts{% if contact %}/{{ contact.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if contact %}/contacts/{{ contact.id }}{% else %}/contacts{% endif %}">
+  {% if customer_id %}<input type="hidden" name="customer_id" value="{{ customer_id }}">{% endif %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Persönliche Daten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kunde</label>
+          <select name="customer_id" class="form-input">
+            <option value="">— Kein Kunde —</option>
+            {% for cust in customers %}
+            <option value="{{ cust.id }}" {% if (contact.customer_id == cust.id) or (customer_id == cust.id|string) %}selected{% endif %}>
+              {{ cust.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vorname <span class="text-red-500">*</span></label>
+            <input type="text" name="first_name" value="{{ contact.first_name }}" required class="form-input">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nachname <span class="text-red-500">*</span></label>
+            <input type="text" name="last_name" value="{{ contact.last_name }}" required class="form-input">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+          <input type="text" name="position" value="{{ contact.position }}" class="form-input" placeholder="z.B. Geschäftsführer, IT-Leitung...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Abteilung</label>
+          <input type="text" name="department" value="{{ contact.department }}" class="form-input">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Kontaktdaten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+          <input type="tel" name="phone" value="{{ contact.phone }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mobil</label>
+          <input type="tel" name="mobile" value="{{ contact.mobile }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+          <input type="email" name="email" value="{{ contact.email }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+          <textarea name="notes" rows="3" class="form-input">{{ contact.notes }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card lg:col-span-2">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Sichtbarkeit für Serviceeinsätze</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="visible_phone" value="1" {% if contact.visible_phone %}checked{% endif %} class="rounded">
+          Telefon sichtbar
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="visible_mobile" value="1" {% if contact.visible_mobile %}checked{% endif %} class="rounded">
+          Mobil sichtbar
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="visible_email" value="1" {% if contact.visible_email %}checked{% endif %} class="rounded">
+          E-Mail sichtbar
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="visible_notes" value="1" {% if contact.visible_notes %}checked{% endif %} class="rounded">
+          Notizen sichtbar
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="is_primary" value="1" {% if contact.is_primary %}checked{% endif %} class="rounded">
+          Hauptkontakt
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="receives_invoices" value="1" {% if contact.receives_invoices %}checked{% endif %} class="rounded">
+          Erhält Rechnungen
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="receives_reports" value="1" {% if contact.receives_reports %}checked{% endif %} class="rounded">
+          Erhält Berichte
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="emergency_contact" value="1" {% if contact.emergency_contact %}checked{% endif %} class="rounded">
+          Notfallkontakt
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/contacts{% if contact %}/{{ contact.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}

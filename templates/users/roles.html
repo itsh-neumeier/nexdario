@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Rollen von {{ target_user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Rollen: {{ target_user.display_name }}</h1>
+  <a href="/users" class="btn btn-secondary">← Zurück</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="/users/{{ target_user.id }}/roles">
+  <div class="card max-w-lg">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Rollenzuweisung</h3>
+    <div class="space-y-3">
+      {% for role in all_roles %}
+      <label class="flex items-center gap-3 p-2 rounded hover:bg-gray-50">
+        <input type="checkbox" name="role_ids" value="{{ role.id }}"
+          {% if role.id in user_role_ids %}checked{% endif %} class="rounded">
+        <div>
+          <p class="text-sm font-medium text-gray-900">{{ role.name }}</p>
+          {% if role.description %}
+          <p class="text-xs text-gray-500">{{ role.description }}</p>
+          {% endif %}
+        </div>
+        {% if role.is_system %}
+        <span class="badge badge-blue ml-auto text-xs">System</span>
+        {% endif %}
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="mt-6 flex gap-3">
+      <button type="submit" class="btn btn-primary">Speichern</button>
+      <a href="/users" class="btn btn-secondary">Abbrechen</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

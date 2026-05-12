@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{% if change %}Change bearbeiten{% else %}Neuer Change{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if change %}Change bearbeiten{% else %}Neuer IT Change{% endif %}</h1>
+  <a href="/changes{% if change %}/{{ change.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if change %}/changes/{{ change.id }}{% else %}/changes{% endif %}">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Change-Daten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Titel <span class="text-red-500">*</span></label>
+          <input type="text" name="title" value="{{ change.title }}" required class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+          <select name="category" class="form-input">
+            <option value="">— Keine —</option>
+            <option value="network" {% if change.category == "network" %}selected{% endif %}>Netzwerk</option>
+            <option value="server" {% if change.category == "server" %}selected{% endif %}>Server</option>
+            <option value="security" {% if change.category == "security" %}selected{% endif %}>Security</option>
+            <option value="backup" {% if change.category == "backup" %}selected{% endif %}>Backup</option>
+            <option value="software" {% if change.category == "software" %}selected{% endif %}>Software</option>
+            <option value="hardware" {% if change.category == "hardware" %}selected{% endif %}>Hardware</option>
+            <option value="firewall" {% if change.category == "firewall" %}selected{% endif %}>Firewall</option>
+            <option value="dns" {% if change.category == "dns" %}selected{% endif %}>DNS</option>
+            <option value="vpn" {% if change.category == "vpn" %}selected{% endif %}>VPN</option>
+            <option value="email" {% if change.category == "email" %}selected{% endif %}>E-Mail</option>
+            <option value="cloud" {% if change.category == "cloud" %}selected{% endif %}>Cloud</option>
+            <option value="monitoring" {% if change.category == "monitoring" %}selected{% endif %}>Monitoring</option>
+            <option value="patch" {% if change.category == "patch" %}selected{% endif %}>Patch/Update</option>
+            <option value="access" {% if change.category == "access" %}selected{% endif %}>Zugriffsmanagement</option>
+            <option value="virtualization" {% if change.category == "virtualization" %}selected{% endif %}>Virtualisierung</option>
+            <option value="storage" {% if change.category == "storage" %}selected{% endif %}>Storage</option>
+            <option value="telephony" {% if change.category == "telephony" %}selected{% endif %}>Telefonie</option>
+            <option value="compliance" {% if change.category == "compliance" %}selected{% endif %}>Compliance</option>
+            <option value="disaster_recovery" {% if change.category == "disaster_recovery" %}selected{% endif %}>Disaster Recovery</option>
+            <option value="migration" {% if change.category == "migration" %}selected{% endif %}>Migration</option>
+            <option value="decommissioning" {% if change.category == "decommissioning" %}selected{% endif %}>Dekommissionierung</option>
+            <option value="other" {% if change.category == "other" %}selected{% endif %}>Sonstiges</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Risikolevel</label>
+          <select name="risk_level" class="form-input">
+            <option value="low" {% if change.risk_level == "low" %}selected{% endif %}>Niedrig</option>
+            <option value="medium" {% if not change or change.risk_level == "medium" %}selected{% endif %}>Mittel</option>
+            <option value="high" {% if change.risk_level == "high" %}selected{% endif %}>Hoch</option>
+            <option value="critical" {% if change.risk_level == "critical" %}selected{% endif %}>Kritisch</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Datum</label>
+          <input type="date" name="planned_date" value="{{ change.planned_date }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Zeit</label>
+          <input type="time" name="planned_time" value="{{ change.planned_time }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Dauer (Std.)</label>
+          <input type="number" name="estimated_duration" value="{{ change.estimated_duration }}" class="form-input" step="0.5" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Beschreibung</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung / Ziel</label>
+          <textarea name="description" rows="4" class="form-input">{{ change.description }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Testplan</label>
+          <textarea name="test_plan" rows="3" class="form-input" placeholder="Wie wird die Änderung getestet?">{{ change.test_plan }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rollback-Plan</label>
+          <textarea name="rollback_plan" rows="3" class="form-input" placeholder="Was tun bei Fehlschlag?">{{ change.rollback_plan }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Betroffene Systeme</label>
+          <textarea name="affected_systems" rows="2" class="form-input" placeholder="Hostnamen, IPs...">{{ change.affected_systems }}</textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Interne Notizen</label>
+          <textarea name="notes" rows="2" class="form-input">{{ change.notes }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/changes{% if change %}/{{ change.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}

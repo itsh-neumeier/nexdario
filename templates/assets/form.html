@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{% if asset %}Asset bearbeiten{% else %}Neues Asset{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if asset %}Asset bearbeiten{% else %}Neues Asset{% endif %}</h1>
+  <a href="/assets{% if asset %}/{{ asset.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <p class="text-sm text-red-800">{{ error }}</p>
+</div>
+{% endif %}
+
+<form method="post" action="{% if asset %}/assets/{{ asset.id }}{% else %}/assets{% endif %}">
+  {% if location_id %}<input type="hidden" name="location_id" value="{{ location_id }}">{% endif %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Gerätedaten</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Standort</label>
+          <select name="location_id" class="form-input">
+            <option value="">— Kein Standort —</option>
+            {% for loc in locations %}
+            <option value="{{ loc.id }}" {% if (asset.location_id == loc.id) or (location_id == loc.id|string) %}selected{% endif %}>
+              [{{ loc.site_code }}] {{ loc.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hostname <span class="text-red-500">*</span></label>
+          <input type="text" name="hostname" value="{{ asset.hostname }}" required class="form-input font-mono uppercase"
+            placeholder="SITE-TYPE-ROLE-01" oninput="this.value=this.value.toUpperCase()">
+          <p class="text-xs text-gray-400 mt-1">Schema: &lt;SITE&gt;-&lt;TYPE&gt;-&lt;ROLE&gt;-&lt;NN&gt; — nur A-Z, 0-9, Bindestrich</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Asset-Typ <span class="text-red-500">*</span></label>
+          <select name="asset_type" required class="form-input">
+            <option value="">— Bitte wählen —</option>
+            <option value="router" {% if asset.asset_type == "router" %}selected{% endif %}>Router</option>
+            <option value="switch" {% if asset.asset_type == "switch" %}selected{% endif %}>Switch</option>
+            <option value="firewall" {% if asset.asset_type == "firewall" %}selected{% endif %}>Firewall</option>
+            <option value="server" {% if asset.asset_type == "server" %}selected{% endif %}>Server</option>
+            <option value="workstation" {% if asset.asset_type == "workstation" %}selected{% endif %}>Workstation</option>
+            <option value="laptop" {% if asset.asset_type == "laptop" %}selected{% endif %}>Laptop</option>
+            <option value="printer" {% if asset.asset_type == "printer" %}selected{% endif %}>Drucker</option>
+            <option value="ap" {% if asset.asset_type == "ap" %}selected{% endif %}>Access Point</option>
+            <option value="camera" {% if asset.asset_type == "camera" %}selected{% endif %}>Kamera</option>
+            <option value="nas" {% if asset.asset_type == "nas" %}selected{% endif %}>NAS</option>
+            <option value="ups" {% if asset.asset_type == "ups" %}selected{% endif %}>USV</option>
+            <option value="phone" {% if asset.asset_type == "phone" %}selected{% endif %}>Telefon/VoIP</option>
+            <option value="other" {% if asset.asset_type == "other" %}selected{% endif %}>Sonstiges</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select name="status" class="form-input">
+            <option value="active" {% if not asset or asset.status == "active" %}selected{% endif %}>Aktiv</option>
+            <option value="inactive" {% if asset.status == "inactive" %}selected{% endif %}>Inaktiv</option>
+            <option value="maintenance" {% if asset.status == "maintenance" %}selected{% endif %}>Wartung</option>
+            <option value="retired" {% if asset.status == "retired" %}selected{% endif %}>Ausgemustert</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Hardware</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hersteller</label>
+          <input type="text" name="manufacturer" value="{{ asset.manufacturer }}" class="form-input" placeholder="Cisco, HP, Dell...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Modell</label>
+          <input type="text" name="model" value="{{ asset.model }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Seriennummer</label>
+          <input type="text" name="serial_number" value="{{ asset.serial_number }}" class="form-input font-mono">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Firmware/Version</label>
+          <input type="text" name="firmware_version" value="{{ asset.firmware_version }}" class="form-input font-mono">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kaufdatum</label>
+          <input type="date" name="purchase_date" value="{{ asset.purchase_date }}" class="form-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Garantie bis</label>
+          <input type="date" name="warranty_until" value="{{ asset.warranty_until }}" class="form-input">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Netzwerk</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">IP-Adresse</label>
+          <input type="text" name="ip_address" value="{{ asset.ip_address }}" class="form-input font-mono" placeholder="192.168.1.1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">MAC-Adresse</label>
+          <input type="text" name="mac_address" value="{{ asset.mac_address }}" class="form-input font-mono" placeholder="AA:BB:CC:DD:EE:FF">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">VLAN</label>
+          <input type="text" name="vlan" value="{{ asset.vlan }}" class="form-input font-mono" placeholder="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">UniFi / Management</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">UniFi Site ID</label>
+          <input type="text" name="unifi_site_id" value="{{ asset.unifi_site_id }}" class="form-input font-mono">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">UniFi Device ID</label>
+          <input type="text" name="unifi_device_id" value="{{ asset.unifi_device_id }}" class="form-input font-mono">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Management-URL</label>
+          <input type="url" name="management_url" value="{{ asset.management_url }}" class="form-input" placeholder="https://...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+          <textarea name="notes" rows="3" class="form-input">{{ asset.notes }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="/assets{% if asset %}/{{ asset.id }}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}
