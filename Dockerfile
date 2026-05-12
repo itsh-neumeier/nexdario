@@ -1,8 +1,8 @@
-FROM rust:1.85-slim AS builder
+FROM rust:1.86-slim AS builder
 
 RUN apt-get update && apt-get install -y pkg-config libssl-dev sqlite3 && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install sqlx-cli --no-default-features --features sqlite
+RUN cargo install sqlx-cli@0.7.4 --no-default-features --features sqlite
 
 WORKDIR /app
 
