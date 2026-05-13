@@ -93,7 +93,7 @@ pub struct RoleForm {
     pub name: String,
     pub display_name: String,
     pub description: Option<String>,
-    pub rank: i64,
+    pub rank: Option<i64>,
     pub is_active: Option<String>,
     pub allow_api_access: Option<String>,
     pub mobile_access: Option<String>,
@@ -127,7 +127,8 @@ pub async fn create(
         auth.id
     ).fetch_one(&state.db).await?.unwrap_or(0);
 
-    if !auth.is_superadmin && form.rank >= user_max_rank {
+    let rank = form.rank.unwrap_or(100);
+    if !auth.is_superadmin && rank >= user_max_rank {
         return Err(AppError::forbidden("Rang darf nicht >= eigener Rolle sein"));
     }
 
@@ -139,7 +140,7 @@ pub async fn create(
     let id = sqlx::query!(
         "INSERT INTO roles (name, display_name, description, rank, is_system, is_active, allow_api_access, mobile_access)
          VALUES (?,?,?,?,0,?,?,?)",
-        name, form.display_name, form.description, form.rank, is_active, allow_api, mobile
+        name, form.display_name, form.description, rank, is_active, allow_api, mobile
     )
     .execute(&state.db).await?.last_insert_rowid();
 
