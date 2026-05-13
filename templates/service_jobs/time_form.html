@@ -13,16 +13,26 @@
   <form method="post" action="/service-jobs/{{ job.id }}/time">
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-        <input type="date" name="date" class="form-input">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Datum / Startzeit</label>
+        <input type="datetime-local" name="started_at" class="form-input">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Stunden <span class="text-red-500">*</span></label>
-        <input type="number" name="hours" required step="0.25" min="0.25" max="24" class="form-input" placeholder="z.B. 2.5">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Dauer (Minuten) <span class="text-red-500">*</span></label>
+        <input type="number" name="duration_minutes" required min="1" max="1440" class="form-input" placeholder="z.B. 90">
+        <p class="text-xs text-gray-400 mt-1">1 Stunde = 60 Minuten</p>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Notiz</label>
-        <textarea name="notes" rows="2" class="form-input" placeholder="Kurze Beschreibung der Tätigkeit..."></textarea>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Aktivität</label>
+        <select name="activity_type" class="form-input">
+          <option value="work">Arbeit</option>
+          <option value="travel">Fahrt</option>
+          <option value="remote">Remote-Support</option>
+          <option value="planning">Planung</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+        <textarea name="description" rows="2" class="form-input" placeholder="Kurze Beschreibung der Tätigkeit..."></textarea>
       </div>
     </div>
     <div class="mt-6 flex gap-3">
