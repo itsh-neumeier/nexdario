@@ -58,7 +58,7 @@
             {% else %}<span class="badge badge-blue">Mittel</span>
             {% endif %}
           </td>
-          <td class="table-cell text-gray-500 text-sm">{{ c.planned_date | format_date if c.planned_date else "–" }}</td>
+          <td class="table-cell text-gray-500 text-sm">{{ c.scheduled_start | format_date if c.scheduled_start else "–" }}</td>
           <td class="table-cell text-gray-600">{{ c.creator_name or "–" }}</td>
           <td class="table-cell">
             {% if c.status == "approved" %}<span class="badge badge-green">Genehmigt</span>

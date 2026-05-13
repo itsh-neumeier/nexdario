@@ -204,8 +204,8 @@
         <td class="table-cell">
           <a href="/service-jobs/{{ job.id }}" class="text-blue-600">{{ job.title }}</a>
         </td>
-        <td class="table-cell text-gray-500 text-sm">{{ job.scheduled_date | format_date }}</td>
-        <td class="table-cell text-gray-600">{{ job.technician_name or "–" }}</td>
+        <td class="table-cell text-gray-500 text-sm">{{ job.scheduled_start | format_date if job.scheduled_start else "–" }}</td>
+        <td class="table-cell text-gray-600">{{ job.status }}</td>
         <td class="table-cell"><span class="badge badge-gray">{{ job.status }}</span></td>
       </tr>
       {% endfor %}

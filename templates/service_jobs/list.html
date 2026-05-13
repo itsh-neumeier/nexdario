@@ -53,8 +53,8 @@
             {{ j.customer_name or "–" }}
             {% if j.location_name %}<br><span class="text-gray-400">{{ j.location_name }}</span>{% endif %}
           </td>
-          <td class="table-cell text-gray-500 text-sm">{{ j.scheduled_date | format_date if j.scheduled_date else "–" }}</td>
-          <td class="table-cell text-gray-600">{{ j.technician_name or "–" }}</td>
+          <td class="table-cell text-gray-500 text-sm">{{ j.scheduled_start | format_date if j.scheduled_start else "–" }}</td>
+          <td class="table-cell text-gray-600">{{ j.technician or "–" }}</td>
           <td class="table-cell">
             {% if j.priority == "critical" %}
               <span class="badge badge-red">Kritisch</span>
