@@ -16,18 +16,11 @@
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Typ</label>
-      <select name="asset_type" class="form-input">
+      <select name="device_type" class="form-input">
         <option value="">Alle Typen</option>
-        <option value="router" {% if asset_type == "router" %}selected{% endif %}>Router</option>
-        <option value="switch" {% if asset_type == "switch" %}selected{% endif %}>Switch</option>
-        <option value="firewall" {% if asset_type == "firewall" %}selected{% endif %}>Firewall</option>
-        <option value="server" {% if asset_type == "server" %}selected{% endif %}>Server</option>
-        <option value="workstation" {% if asset_type == "workstation" %}selected{% endif %}>Workstation</option>
-        <option value="laptop" {% if asset_type == "laptop" %}selected{% endif %}>Laptop</option>
-        <option value="printer" {% if asset_type == "printer" %}selected{% endif %}>Drucker</option>
-        <option value="ap" {% if asset_type == "ap" %}selected{% endif %}>Access Point</option>
-        <option value="camera" {% if asset_type == "camera" %}selected{% endif %}>Kamera</option>
-        <option value="other" {% if asset_type == "other" %}selected{% endif %}>Sonstiges</option>
+        {% for t in device_types %}
+        <option value="{{ t.code }}" {% if device_type == t.code %}selected{% endif %}>{{ t.code }} — {{ t.label }}</option>
+        {% endfor %}
       </select>
     </div>
     <div>
@@ -52,7 +45,7 @@
           <th class="table-header">Typ</th>
           <th class="table-header">Hersteller/Modell</th>
           <th class="table-header">Standort</th>
-          <th class="table-header">IP-Adresse</th>
+          <th class="table-header">Management-IP</th>
           <th class="table-header">Status</th>
           <th class="table-header"></th>
         </tr>
@@ -63,14 +56,14 @@
           <td class="table-cell font-mono text-sm">
             <a href="/assets/{{ a.id }}" class="text-blue-600 hover:text-blue-800">{{ a.hostname }}</a>
           </td>
-          <td class="table-cell text-gray-500">{{ a.asset_type }}</td>
+          <td class="table-cell"><span class="font-mono text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{{ a.device_type }}</span></td>
           <td class="table-cell text-gray-600">{{ a.manufacturer }} {{ a.model }}</td>
           <td class="table-cell text-gray-600">
             {% if a.location_id %}
             <a href="/locations/{{ a.location_id }}" class="text-blue-600 hover:text-blue-800">{{ a.location_name }}</a>
             {% else %}–{% endif %}
           </td>
-          <td class="table-cell font-mono text-xs text-gray-500">{{ a.ip_address or "–" }}</td>
+          <td class="table-cell font-mono text-xs text-gray-500">{{ a.management_ip or "–" }}</td>
           <td class="table-cell">
             {% if a.status == "active" %}
               <span class="badge badge-green">Aktiv</span>

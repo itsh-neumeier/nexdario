@@ -44,16 +44,20 @@
     .form-input { @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2; }
     .form-select { @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2 bg-white; }
     .form-textarea { @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border px-3 py-2; }
-    .table-header { @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider; }
-    .table-cell { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900; }
+    .table-header { @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50; }
+    .table-cell { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900; }
     .page-header { @apply flex items-center justify-between mb-6; }
     .page-title { @apply text-2xl font-bold text-gray-900; }
   </style>
   <style>
     .sl { display:flex; align-items:center; gap:10px; padding:7px 12px; border-radius:6px; font-size:13px; font-weight:500; color:#d1d5db; text-decoration:none; transition:background .15s,color .15s; }
     .sl:hover { background:#1f2937; color:#fff; }
+    .sl.active { background:#2563eb!important; color:#fff!important; }
     .sl svg, .si { width:16px; height:16px; flex-shrink:0; }
     .sh { padding:16px 12px 4px; font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.08em; }
+    /* Table base — transparent tbody so card bg shows through */
+    tbody.bg-white { background-color:transparent; }
+    table { border-collapse:collapse; }
     /* Dark mode */
     .dark body { background-color:#111827!important; }
     .dark main { background-color:#111827!important; }
@@ -61,14 +65,21 @@
     .dark .form-input,.dark .form-select,.dark .form-textarea { background-color:#374151!important; border-color:#4b5563!important; color:#f9fafb!important; }
     .dark input[type=date],.dark input[type=text],.dark input[type=url],.dark input[type=email],.dark input[type=number],.dark input[type=password],.dark select,.dark textarea { background-color:#374151!important; border-color:#4b5563!important; color:#f9fafb!important; }
     .dark .bg-white { background-color:#1f2937!important; }
+    .dark tbody { background-color:transparent!important; }
     .dark .bg-gray-50 { background-color:#111827!important; }
     .dark .bg-gray-100 { background-color:#1f2937!important; }
+    .dark .bg-blue-100 { background-color:#1e3a5f!important; }
+    .dark .bg-green-100 { background-color:#064e3b!important; }
+    .dark .bg-purple-100 { background-color:#3b0764!important; }
+    .dark .bg-orange-100 { background-color:#7c2d12!important; }
+    .dark .bg-yellow-100 { background-color:#78350f!important; }
     .dark .text-gray-900 { color:#f9fafb!important; }
     .dark .text-gray-800 { color:#e5e7eb!important; }
     .dark .text-gray-700 { color:#d1d5db!important; }
     .dark .text-gray-600 { color:#9ca3af!important; }
     .dark .text-gray-500 { color:#6b7280!important; }
-    .dark .border-gray-200 { border-color:#374151!important; }
+    .dark .text-gray-400 { color:#6b7280!important; }
+    .dark .border-gray-200,.dark .border-gray-100 { border-color:#374151!important; }
     .dark .border-b { border-color:#374151!important; }
     .dark .divide-gray-200>*,.dark .divide-gray-100>* { border-color:#374151!important; }
     .dark .shadow-sm { box-shadow:0 1px 3px rgba(0,0,0,.5)!important; }
@@ -76,10 +87,11 @@
     .dark .btn-secondary:hover { background-color:#4b5563!important; }
     .dark .page-title { color:#f9fafb!important; }
     .dark table { color:#e5e7eb; }
-    .dark thead { background-color:#1f2937; }
-    .dark .table-header { color:#9ca3af!important; }
+    .dark thead tr { background-color:#111827!important; }
+    .dark .table-header { color:#6b7280!important; background-color:#111827!important; }
     .dark .table-cell { color:#e5e7eb!important; }
-    .dark tbody tr:hover { background-color:#1f2937!important; }
+    .dark tr:hover td { background-color:#374151!important; }
+    .dark .hover\:bg-gray-50:hover,.dark .hover\:bg-gray-100:hover { background-color:#374151!important; }
     .dark .badge-green { background-color:#064e3b!important; color:#6ee7b7!important; }
     .dark .badge-yellow { background-color:#78350f!important; color:#fde68a!important; }
     .dark .badge-red { background-color:#7f1d1d!important; color:#fca5a5!important; }
@@ -90,12 +102,17 @@
     .dark .bg-yellow-50 { background-color:#78350f!important; }
     .dark .bg-green-50 { background-color:#064e3b!important; }
     .dark .bg-blue-50 { background-color:#1e3a5f!important; }
-    .dark .hover\:bg-gray-50:hover,.dark .hover\:bg-gray-100:hover { background-color:#1f2937!important; }
     .dark .text-blue-700 { color:#93c5fd!important; }
     .dark .text-blue-600 { color:#60a5fa!important; }
-    .dark .text-green-700,.dark .text-green-800 { color:#6ee7b7!important; }
-    .dark .text-red-500,.dark .text-red-700 { color:#f87171!important; }
+    .dark .text-blue-500 { color:#60a5fa!important; }
+    .dark .text-green-600,.dark .text-green-700,.dark .text-green-800 { color:#34d399!important; }
+    .dark .text-purple-600 { color:#a78bfa!important; }
+    .dark .text-orange-600 { color:#fb923c!important; }
+    .dark .text-yellow-600 { color:#fbbf24!important; }
+    .dark .text-red-500,.dark .text-red-600,.dark .text-red-700 { color:#f87171!important; }
     .dark .rounded-lg.border { border-color:#374151!important; }
+    .dark address { color:#d1d5db!important; }
+    .dark .not-italic { color:#d1d5db!important; }
   </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -245,9 +262,20 @@
     if (sun) sun.classList.toggle('hidden', !isDark);
     if (moon) moon.classList.toggle('hidden', isDark);
   }
-  // Sync icons on load
+  // Sync icons + active nav link on load
   document.addEventListener('DOMContentLoaded', () => {
     updateDarkIcons(document.getElementById('html-root').classList.contains('dark'));
+
+    // Highlight current page in sidebar
+    const path = window.location.pathname;
+    document.querySelectorAll('nav .sl').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href) return;
+      const active = href === '/'
+        ? path === '/'
+        : path === href || path.startsWith(href + '/');
+      if (active) link.classList.add('active');
+    });
   });
 </script>
 </body>

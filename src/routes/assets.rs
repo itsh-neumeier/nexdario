@@ -20,6 +20,8 @@ pub async fn list(
 
     let search = q.search.as_deref().unwrap_or("");
     let like = format!("%{}%", search);
+    let device_type_filter = q.device_type.as_deref().unwrap_or("").to_string();
+    let status_filter = q.status.as_deref().unwrap_or("").to_string();
 
     let assets = sqlx::query!(
         "SELECT a.id, a.hostname, a.device_type, a.role, a.manufacturer, a.model,
@@ -29,8 +31,12 @@ pub async fn list(
          LEFT JOIN customers c ON c.id = a.customer_id
          LEFT JOIN locations l ON l.id = a.location_id
          WHERE (a.hostname LIKE ? OR a.manufacturer LIKE ? OR a.model LIKE ? OR a.management_ip LIKE ?)
-         ORDER BY a.hostname LIMIT 200",
-        like, like, like, like
+           AND (? = '' OR a.device_type = ?)
+           AND (? = '' OR a.status = ?)
+         ORDER BY a.hostname LIMIT 500",
+        like, like, like, like,
+        device_type_filter, device_type_filter,
+        status_filter, status_filter
     )
     .fetch_all(&state.db)
     .await?;
@@ -42,12 +48,21 @@ pub async fn list(
         "customer_name": a.customer_name, "location_name": a.location_name, "site_code": a.site_code,
     })).collect();
 
+    // Load device types from DB for filter dropdown
+    let db_types = sqlx::query!(
+        "SELECT code, label FROM asset_device_types WHERE is_active=1 ORDER BY sort_order, code"
+    ).fetch_all(&state.db).await?;
+    let device_types: Vec<serde_json::Value> = db_types.into_iter()
+        .map(|t| serde_json::json!({"code": t.code, "label": t.label})).collect();
+
     state.render("assets/list.html", minijinja::context! {
         app_name => &state.config.app_name,
         user => &auth,
         assets => items,
         search => search,
-        device_types => naming::DEVICE_TYPES,
+        device_type => device_type_filter,
+        status => status_filter,
+        device_types => device_types,
     })
 }
 
