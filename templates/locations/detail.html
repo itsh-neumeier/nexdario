@@ -120,9 +120,9 @@
           <td class="table-cell font-mono text-sm">
             <a href="/assets/{{ asset.id }}" class="text-blue-600">{{ asset.hostname }}</a>
           </td>
-          <td class="table-cell text-gray-500">{{ asset.asset_type }}</td>
+          <td class="table-cell"><span class="font-mono text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{{ asset.device_type or "–" }}</span></td>
           <td class="table-cell text-gray-600">{{ asset.manufacturer }} {{ asset.model }}</td>
-          <td class="table-cell font-mono text-xs text-gray-500">{{ asset.ip_address or "–" }}</td>
+          <td class="table-cell font-mono text-xs text-gray-500">{{ asset.management_ip or "–" }}</td>
           <td class="table-cell">
             {% if asset.status == "active" %}
               <span class="badge badge-green">Aktiv</span>
@@ -165,7 +165,7 @@
       <tr>
         <td class="table-cell text-gray-900">{{ wan.provider }}</td>
         <td class="table-cell text-gray-500">{{ wan.connection_type }}</td>
-        <td class="table-cell text-gray-600">{{ wan.download_mbps }}↓ / {{ wan.upload_mbps }}↑ Mbit/s</td>
+        <td class="table-cell text-gray-600">{{ wan.bandwidth_down or "?" }}↓ / {{ wan.bandwidth_up or "?" }}↑ Mbit/s</td>
         <td class="table-cell font-mono text-xs text-gray-500">{{ wan.ip_address or "DHCP" }}</td>
         <td class="table-cell">
           {% if wan.status == "active" %}
