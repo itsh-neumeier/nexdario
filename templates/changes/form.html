@@ -61,16 +61,12 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Datum</label>
-          <input type="date" name="planned_date" value="{{ change.planned_date }}" class="form-input">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplanter Start</label>
+          <input type="datetime-local" name="scheduled_start" value="{{ change.scheduled_start }}" class="form-input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Zeit</label>
-          <input type="time" name="planned_time" value="{{ change.planned_time }}" class="form-input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Dauer (Std.)</label>
-          <input type="number" name="estimated_duration" value="{{ change.estimated_duration }}" class="form-input" step="0.5" min="0">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Ende</label>
+          <input type="datetime-local" name="scheduled_end" value="{{ change.scheduled_end }}" class="form-input">
         </div>
       </div>
     </div>

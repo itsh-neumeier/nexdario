@@ -76,16 +76,12 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Datum</label>
-          <input type="date" name="scheduled_date" value="{{ job.scheduled_date }}" class="form-input">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplanter Start</label>
+          <input type="datetime-local" name="scheduled_start" value="{{ job.scheduled_start }}" class="form-input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geplante Zeit</label>
-          <input type="time" name="scheduled_time" value="{{ job.scheduled_time }}" class="form-input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Std.)</label>
-          <input type="number" name="estimated_hours" value="{{ job.estimated_hours }}" class="form-input" step="0.5" min="0">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Geplantes Ende</label>
+          <input type="datetime-local" name="scheduled_end" value="{{ job.scheduled_end }}" class="form-input">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung / Auftrag</label>
