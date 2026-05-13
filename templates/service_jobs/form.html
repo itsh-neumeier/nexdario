@@ -68,10 +68,10 @@
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Techniker</label>
-          <select name="assigned_to" class="form-input">
+          <select name="assigned_employee_id" class="form-input">
             <option value="">— Nicht zugewiesen —</option>
             {% for emp in employees %}
-            <option value="{{ emp.id }}" {% if job.assigned_to == emp.id %}selected{% endif %}>{{ emp.display_name }}</option>
+            <option value="{{ emp.id }}" {% if job.assigned_employee_id == emp.id %}selected{% endif %}>{{ emp.name }}</option>
             {% endfor %}
           </select>
         </div>
