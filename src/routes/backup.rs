@@ -37,6 +37,12 @@ pub async fn index(
         can_create => auth.has_permission(BACKUP_CREATE),
         can_download => auth.has_permission(BACKUP_DOWNLOAD),
         can_restore => auth.has_permission(BACKUP_RESTORE),
+        config => serde_json::json!({
+            "backup_encrypted": state.config.backup_encryption_enabled,
+            "backup_enabled": state.config.backup_enabled,
+            "backup_interval_hours": state.config.backup_interval_hours,
+            "backup_retention_days": state.config.backup_retention_local_days,
+        }),
     })
 }
 
