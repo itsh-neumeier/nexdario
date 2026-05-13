@@ -212,9 +212,10 @@ pub async fn update(
             .execute(&state.db).await?;
     }
 
+    let email_trimmed = form.email.trim().to_string();
     sqlx::query!(
         "UPDATE users SET email=?, display_name=?, is_active=?, updated_at=datetime('now') WHERE id=?",
-        form.email.trim(), form.display_name, is_active, id
+        email_trimmed, form.display_name, is_active, id
     )
     .execute(&state.db).await?;
 

@@ -279,7 +279,7 @@ pub async fn add_time(
     let description = form.description.as_deref().unwrap_or("");
     let employee_id: Option<i64> = sqlx::query_scalar!(
         "SELECT id FROM employees WHERE user_id=? LIMIT 1", auth.id
-    ).fetch_optional(&state.db).await?.flatten();
+    ).fetch_optional(&state.db).await?;
     if let Some(emp_id) = employee_id {
         sqlx::query!(
             "INSERT INTO time_entries (service_job_id, employee_id, activity_type, description, started_at, duration_minutes, is_billable)

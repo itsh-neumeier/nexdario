@@ -176,11 +176,12 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
 
     let display_name = format!("Administrator");
 
+    let admin_email = format!("{}@localhost", config.admin_username);
     let user_id = sqlx::query!(
         "INSERT INTO users (username, email, display_name, password_hash, is_active, is_system)
          VALUES (?, ?, ?, ?, 1, 1)",
         config.admin_username,
-        format!("{}@localhost", config.admin_username),
+        admin_email,
         display_name,
         hash
     )

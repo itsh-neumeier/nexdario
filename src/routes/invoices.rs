@@ -343,10 +343,11 @@ pub async fn export_xrechnung(
     use sqlx::Row;
     let invoice_number: String = invoice.try_get("invoice_number").unwrap_or_default();
     let filename = format!("XRechnung_{}.xml", invoice_number);
+    let content_disposition = format!("attachment; filename=\"{}\"", filename);
     Ok((
         [
-            (header::CONTENT_TYPE, "application/xml; charset=utf-8"),
-            (header::CONTENT_DISPOSITION, &format!("attachment; filename=\"{}\"", filename)),
+            (header::CONTENT_TYPE, "application/xml; charset=utf-8".to_string()),
+            (header::CONTENT_DISPOSITION, content_disposition),
         ],
         xml,
     ))

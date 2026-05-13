@@ -50,7 +50,7 @@ pub async fn index(
     )
     .fetch_one(&state.db)
     .await?
-     as i64;
+    .unwrap_or(0) as i64;
 
     let overdue_invoices: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM invoices WHERE status = 'overdue' OR
@@ -58,7 +58,7 @@ pub async fn index(
     )
     .fetch_one(&state.db)
     .await?
-     as i64;
+    .unwrap_or(0) as i64;
 
     // Last backup
     let last_backup = sqlx::query_scalar!(
