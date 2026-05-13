@@ -405,11 +405,13 @@ pub async fn use_access_token(
     ).execute(&state.db).await?;
 
     // Audit without the password
+    let secret_id_str = token_row.secret_id.to_string();
+    let token_purpose = format!("Token used for: {}", token_row.purpose);
     sqlx::query!(
         "INSERT INTO audit_log (action, resource_type, resource_id, details, success)
          VALUES ('use_access_token', 'secret', ?, ?, 1)",
-        token_row.secret_id.to_string(),
-        format!("Token used for: {}", token_row.purpose)
+        secret_id_str,
+        token_purpose
     ).execute(&state.db).await.ok();
 
     state.render("secrets/access_view.html", minijinja::context! {

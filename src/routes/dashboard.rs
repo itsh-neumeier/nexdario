@@ -10,47 +10,47 @@ pub async fn index(
         sqlx::query_scalar!("SELECT COUNT(*) FROM customers WHERE status = 'active'")
             .fetch_one(&state.db)
             .await?
-            .unwrap_or(0) as i64;
+             as i64;
 
     let location_count: i64 =
         sqlx::query_scalar!("SELECT COUNT(*) FROM locations WHERE status = 'active'")
             .fetch_one(&state.db)
             .await?
-            .unwrap_or(0) as i64;
+             as i64;
 
     let asset_count: i64 =
         sqlx::query_scalar!("SELECT COUNT(*) FROM assets WHERE status = 'active'")
             .fetch_one(&state.db)
             .await?
-            .unwrap_or(0) as i64;
+             as i64;
 
     let open_jobs: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM service_jobs WHERE status NOT IN ('completed','cancelled')"
     )
     .fetch_one(&state.db)
     .await?
-    .unwrap_or(0) as i64;
+     as i64;
 
     let open_changes: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM changes WHERE status NOT IN ('completed','closed','cancelled','rejected')"
     )
     .fetch_one(&state.db)
     .await?
-    .unwrap_or(0) as i64;
+     as i64;
 
     let open_quotes: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM quotes WHERE status IN ('draft','sent')"
     )
     .fetch_one(&state.db)
     .await?
-    .unwrap_or(0) as i64;
+     as i64;
 
     let open_invoices: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM invoices WHERE status IN ('approved','sent','open','overdue')"
     )
     .fetch_one(&state.db)
     .await?
-    .unwrap_or(0) as i64;
+     as i64;
 
     let overdue_invoices: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM invoices WHERE status = 'overdue' OR
@@ -58,7 +58,7 @@ pub async fn index(
     )
     .fetch_one(&state.db)
     .await?
-    .unwrap_or(0) as i64;
+     as i64;
 
     // Last backup
     let last_backup = sqlx::query_scalar!(

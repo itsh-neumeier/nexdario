@@ -318,22 +318,31 @@ pub async fn export_xrechnung(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(XRECHNUNG_EXPORT)?;
 
-    let invoice = sqlx::query!("SELECT * FROM invoices WHERE id=?", id)
+    let invoice = sqlx::query("SELECT * FROM invoices WHERE id=?")
+        .bind(id)
         .fetch_optional(&state.db).await?.ok_or(AppError::NotFound)?;
 
-    if invoice.status == "draft" {
-        return Err(AppError::bad_request("Entwürfe können nicht exportiert werden"));
+    {
+        use sqlx::Row;
+        let status: String = invoice.try_get("status").unwrap_or_default();
+        if status == "draft" {
+            return Err(AppError::bad_request("Entwürfe können nicht exportiert werden"));
+        }
     }
 
-    let items = sqlx::query!("SELECT * FROM invoice_items WHERE invoice_id=? ORDER BY position", id)
+    let items = sqlx::query("SELECT * FROM invoice_items WHERE invoice_id=? ORDER BY position")
+        .bind(id)
         .fetch_all(&state.db).await?;
 
     let xml = build_xrechnung_xml(&invoice, &items)?;
 
-    audit::log(&state.db, Some(&auth), "export_xrechnung", "invoice", Some(&id.to_string()), None, None, true).await;
+    let id_str = id.to_string();
+    audit::log(&state.db, Some(&auth), "export_xrechnung", "invoice", Some(&id_str), None, None, true).await;
 
     use axum::http::header;
-    let filename = format!("XRechnung_{}.xml", invoice.invoice_number);
+    use sqlx::Row;
+    let invoice_number: String = invoice.try_get("invoice_number").unwrap_or_default();
+    let filename = format!("XRechnung_{}.xml", invoice_number);
     Ok((
         [
             (header::CONTENT_TYPE, "application/xml; charset=utf-8"),

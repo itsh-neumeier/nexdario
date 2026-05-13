@@ -150,8 +150,7 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
          WHERE r.name = 'superadmin' AND u.is_active = 1"
     )
     .fetch_one(pool)
-    .await?
-    .unwrap_or(0) as i64;
+    .await? as i64;
 
     if superadmin_count > 0 {
         tracing::info!("Superadmin already exists, skipping initial admin creation");
@@ -161,8 +160,7 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
     // Check if any user exists
     let user_count: i64 = sqlx::query_scalar!("SELECT COUNT(*) FROM users")
         .fetch_one(pool)
-        .await?
-        .unwrap_or(0) as i64;
+        .await? as i64;
 
     if user_count > 0 {
         tracing::warn!(

@@ -90,10 +90,11 @@ pub async fn action(
                     "SELECT id FROM roles WHERE name='superadmin'"
                 ).fetch_optional(&state.db).await?.flatten();
 
+                let email = format!("{}@localhost", username);
                 let user_id = sqlx::query!(
                     "INSERT INTO users (username, email, display_name, password_hash, is_active, is_system)
                      VALUES (?,?,?,?,1,1)",
-                    username, format!("{}@localhost", username), "Administrator", hash
+                    username, email, "Administrator", hash
                 ).execute(&state.db).await?.last_insert_rowid();
 
                 if let Some(rid) = role_id {
@@ -103,10 +104,11 @@ pub async fn action(
                     ).execute(&state.db).await?;
                 }
 
+                let user_id_str = user_id.to_string();
                 sqlx::query!(
                     "INSERT INTO audit_log (action, resource_type, resource_id, details, success)
                      VALUES ('recovery_create_admin', 'user', ?, 'Recovery: Created admin user', 1)",
-                    user_id.to_string()
+                    user_id_str
                 ).execute(&state.db).await.ok();
             } else {
                 sqlx::query!(

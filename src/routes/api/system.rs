@@ -15,7 +15,6 @@ pub async fn info(State(state): State<AppState>) -> impl IntoResponse {
         .fetch_one(&state.db)
         .await
         .ok()
-        .flatten()
         .unwrap_or(0) as i64;
 
     Json(json!({

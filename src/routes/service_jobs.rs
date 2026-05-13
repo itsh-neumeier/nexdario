@@ -260,9 +260,10 @@ pub async fn time_form(
 
 #[derive(Deserialize)]
 pub struct TimeEntryForm {
-    pub hours: f64,
-    pub date: Option<String>,
-    pub notes: Option<String>,
+    pub duration_minutes: Option<i64>,
+    pub started_at: Option<String>,
+    pub description: Option<String>,
+    pub activity_type: Option<String>,
 }
 
 pub async fn add_time(
@@ -272,15 +273,19 @@ pub async fn add_time(
     Form(form): Form<TimeEntryForm>,
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(SERVICE_JOBS_WRITE)?;
-    let date = form.date.unwrap_or_else(|| chrono::Utc::now().format("%Y-%m-%d").to_string());
-    sqlx::query!(
-        "INSERT INTO time_entries (service_job_id, employee_id, date, hours, notes, is_billable)
-         VALUES (?, (SELECT id FROM employees WHERE user_id=? LIMIT 1), ?, ?, ?, 1)",
-        id, auth.id, date, form.hours, form.notes
-    ).execute(&state.db).await?;
-    sqlx::query!(
-        "UPDATE service_jobs SET actual_hours = (SELECT COALESCE(SUM(hours),0) FROM time_entries WHERE service_job_id=?) WHERE id=?",
-        id, id
-    ).execute(&state.db).await?;
+    let started_at = form.started_at.unwrap_or_else(|| chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string());
+    let duration = form.duration_minutes.unwrap_or(0);
+    let activity = form.activity_type.as_deref().unwrap_or("work");
+    let description = form.description.as_deref().unwrap_or("");
+    let employee_id: Option<i64> = sqlx::query_scalar!(
+        "SELECT id FROM employees WHERE user_id=? LIMIT 1", auth.id
+    ).fetch_optional(&state.db).await?.flatten();
+    if let Some(emp_id) = employee_id {
+        sqlx::query!(
+            "INSERT INTO time_entries (service_job_id, employee_id, activity_type, description, started_at, duration_minutes, is_billable)
+             VALUES (?, ?, ?, ?, ?, ?, 1)",
+            id, emp_id, activity, description, started_at, duration
+        ).execute(&state.db).await?;
+    }
     Ok(Redirect::to(&format!("/service-jobs/{}", id)))
 }

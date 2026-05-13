@@ -61,14 +61,15 @@ pub async fn detail(
         id
     ).fetch_all(&state.db).await?;
 
+    let max_rank: i64 = auth.roles.iter()
+        .filter_map(|r| if r == "superadmin" { Some(9999i64) } else { None })
+        .next()
+        .unwrap_or(500);
     let all_roles = sqlx::query!(
         "SELECT id, name, display_name, rank, is_system FROM roles
          WHERE is_active=1 AND rank < ?
          ORDER BY rank DESC",
-        auth.roles.iter()
-            .filter_map(|r| if r == "superadmin" { Some(9999i64) } else { None })
-            .next()
-            .unwrap_or(500)
+        max_rank
     ).fetch_all(&state.db).await?;
 
     let role_list: Vec<serde_json::Value> = user_roles.into_iter().map(|r| serde_json::json!({
@@ -134,10 +135,12 @@ pub async fn create(
     let hash = auth_utils::hash_password(password)
         .map_err(|e| AppError::internal(e.to_string()))?;
 
+    let username = form.username.trim().to_string();
+    let email = form.email.trim().to_string();
     let id = sqlx::query!(
         "INSERT INTO users (username, email, display_name, password_hash, is_active)
          VALUES (?, ?, ?, ?, 1)",
-        form.username.trim(), form.email.trim(), form.display_name, hash
+        username, email, form.display_name, hash
     )
     .execute(&state.db).await?.last_insert_rowid();
 
@@ -188,13 +191,13 @@ pub async fn update(
         let is_superadmin: i64 = sqlx::query_scalar!(
             "SELECT COUNT(*) FROM user_roles ur JOIN roles r ON r.id=ur.role_id
              WHERE ur.user_id=? AND r.name='superadmin'", id
-        ).fetch_one(&state.db).await?.unwrap_or(0) as i64;
+        ).fetch_one(&state.db).await? as i64;
 
         if is_superadmin > 0 {
             let superadmin_count: i64 = sqlx::query_scalar!(
                 "SELECT COUNT(*) FROM users u JOIN user_roles ur ON ur.user_id=u.id
                  JOIN roles r ON r.id=ur.role_id WHERE r.name='superadmin' AND u.is_active=1"
-            ).fetch_one(&state.db).await?.unwrap_or(0) as i64;
+            ).fetch_one(&state.db).await? as i64;
 
             if superadmin_count <= 1 {
                 return Err(AppError::bad_request("Der letzte aktive Superadmin kann nicht deaktiviert werden."));

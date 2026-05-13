@@ -44,7 +44,7 @@ pub async fn list(
     let total: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM customers WHERE status=? AND (name LIKE ? OR customer_number LIKE ?)",
         status, like, like
-    ).fetch_one(&state.db).await?.unwrap_or(0) as i64;
+    ).fetch_one(&state.db).await? as i64;
 
     let customers = sqlx::query!(
         "SELECT id, customer_number, name, customer_type, status, industry, phone, email,
