@@ -90,14 +90,52 @@ pub async fn detail(
 #[derive(Deserialize)]
 pub struct InvoiceForm {
     pub customer_id: Option<i64>,
-    pub invoice_date: String,
+    pub invoice_date: Option<String>,
     pub delivery_date: Option<String>,
-    pub due_date: Option<String>,
-    pub invoice_type: Option<String>,
     pub payment_terms: Option<String>,
     pub notes: Option<String>,
-    pub leitweg_id: Option<String>,
-    pub buyer_reference: Option<String>,
+    #[serde(default, rename = "item_description[]")]
+    pub item_descriptions: Vec<String>,
+    #[serde(default, rename = "item_quantity[]")]
+    pub item_quantities: Vec<String>,
+    #[serde(default, rename = "item_unit[]")]
+    pub item_units: Vec<String>,
+    #[serde(default, rename = "item_unit_price[]")]
+    pub item_unit_prices: Vec<String>,
+    #[serde(default, rename = "item_vat_rate[]")]
+    pub item_vat_rates: Vec<String>,
+}
+
+async fn insert_items(
+    db: &sqlx::SqlitePool,
+    parent_id: i64,
+    form: &InvoiceForm,
+) -> Result<(f64, f64, f64), AppError> {
+    let mut subtotal = 0.0_f64;
+    let mut tax_amount = 0.0_f64;
+
+    for (i, desc) in form.item_descriptions.iter().enumerate() {
+        if desc.trim().is_empty() { continue; }
+        let qty: f64 = form.item_quantities.get(i).and_then(|v| v.parse().ok()).unwrap_or(1.0);
+        let unit = form.item_units.get(i).map(|v| v.as_str()).unwrap_or("Stk.");
+        let unit_price: f64 = form.item_unit_prices.get(i).and_then(|v| v.parse().ok()).unwrap_or(0.0);
+        let tax_rate: f64 = form.item_vat_rates.get(i).and_then(|v| v.parse().ok()).unwrap_or(19.0);
+        let item_sub = (qty * unit_price * 100.0).round() / 100.0;
+        let item_tax = (item_sub * tax_rate / 100.0 * 100.0).round() / 100.0;
+        subtotal += item_sub;
+        tax_amount += item_tax;
+        let pos = (i + 1) as i64;
+        sqlx::query!(
+            "INSERT INTO invoice_items (invoice_id, position, name, quantity, unit, unit_price, tax_rate, subtotal)
+             VALUES (?,?,?,?,?,?,?,?)",
+            parent_id, pos, desc, qty, unit, unit_price, tax_rate, item_sub
+        ).execute(db).await?;
+    }
+
+    let total = ((subtotal + tax_amount) * 100.0).round() / 100.0;
+    subtotal = (subtotal * 100.0).round() / 100.0;
+    tax_amount = (tax_amount * 100.0).round() / 100.0;
+    Ok((subtotal, tax_amount, total))
 }
 
 pub async fn new_form(
@@ -109,22 +147,12 @@ pub async fn new_form(
     let customers = sqlx::query!("SELECT id, name FROM customers WHERE status='active' ORDER BY name LIMIT 200")
         .fetch_all(&state.db).await?;
 
-    // Load company settings
-    let company_name = get_setting(&state, "invoice_company_name").await.unwrap_or_default();
-    let vat_id = get_setting(&state, "invoice_vat_id").await.unwrap_or_default();
-    let iban = get_setting(&state, "invoice_iban").await.unwrap_or_default();
-
     state.render("invoices/form.html", minijinja::context! {
         app_name => &state.config.app_name,
         user => &auth,
         invoice => Option::<serde_json::Value>::None,
         customers => customers.into_iter().map(|c| serde_json::json!({"id": c.id, "name": c.name})).collect::<Vec<_>>(),
-        company_name => company_name,
-        vat_id => vat_id,
-        iban => iban,
         today => chrono::Utc::now().format("%Y-%m-%d").to_string(),
-        title => "Neue Rechnung",
-        action => "/invoices/new",
     })
 }
 
@@ -141,26 +169,25 @@ pub async fn create(
     auth.require_permission(INVOICES_WRITE)?;
 
     let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
-    // Get customer data for snapshot
     let customer = sqlx::query!(
         "SELECT name, billing_street, billing_zip, billing_city, billing_country, vat_id
          FROM customers WHERE id=?", customer_id
     ).fetch_optional(&state.db).await?.ok_or_else(|| AppError::bad_request("Kunde nicht gefunden"))?;
 
     let number = db::next_number(&state.db, "invoice").await?;
-    let invoice_type = form.invoice_type.as_deref().unwrap_or("standard");
+    let invoice_type = "standard";
 
-    // Calc due date from payment terms if not set
     let payment_terms_days: i64 = get_setting(&state, "invoice_payment_terms").await
         .and_then(|v| v.parse().ok()).unwrap_or(14);
 
-    let due_date = form.due_date.clone().or_else(|| {
-        chrono::NaiveDate::parse_from_str(&form.invoice_date, "%Y-%m-%d").ok()
-            .and_then(|d| d.checked_add_signed(chrono::Duration::days(payment_terms_days)))
-            .map(|d| d.format("%Y-%m-%d").to_string())
-    });
+    let invoice_date = form.invoice_date.clone()
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| chrono::Utc::now().format("%Y-%m-%d").to_string());
 
-    // Company data from settings
+    let due_date = chrono::NaiveDate::parse_from_str(&invoice_date, "%Y-%m-%d").ok()
+        .and_then(|d| d.checked_add_signed(chrono::Duration::days(payment_terms_days)))
+        .map(|d| d.format("%Y-%m-%d").to_string());
+
     let our_company = get_setting(&state, "invoice_company_name").await;
     let our_vat_id = get_setting(&state, "invoice_vat_id").await;
     let our_iban = get_setting(&state, "invoice_iban").await;
@@ -169,24 +196,32 @@ pub async fn create(
     let our_zip = get_setting(&state, "invoice_zip").await;
     let our_city = get_setting(&state, "invoice_city").await;
 
-    let payment_terms_days_str = payment_terms_days.to_string();
-    let payment_terms_val = form.payment_terms.as_deref().unwrap_or(&payment_terms_days_str);
+    let payment_terms_str = payment_terms_days.to_string();
+    let payment_terms_val = form.payment_terms.as_deref().unwrap_or(&payment_terms_str);
     let billing_country = customer.billing_country.as_str();
+    let delivery_date = form.delivery_date.as_ref().filter(|v| !v.is_empty()).map(|v| v.as_str());
+    let notes = form.notes.as_deref().filter(|v| !v.is_empty());
 
     let id = sqlx::query!(
         "INSERT INTO invoices (invoice_number, customer_id, invoice_type, status, invoice_date,
          delivery_date, due_date, payment_terms, our_company_name, our_vat_id, our_iban, our_bic,
          our_street, our_zip, our_city,
          customer_name, customer_street, customer_zip, customer_city, customer_country,
-         customer_vat_id, leitweg_id, buyer_reference, notes, created_by)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        number, customer_id, invoice_type, "draft", form.invoice_date,
-        form.delivery_date, due_date, payment_terms_val,
+         customer_vat_id, notes, created_by)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        number, customer_id, invoice_type, "draft", invoice_date,
+        delivery_date, due_date, payment_terms_val,
         our_company, our_vat_id, our_iban, our_bic, our_street, our_zip, our_city,
         customer.name, customer.billing_street, customer.billing_zip,
         customer.billing_city, billing_country,
-        customer.vat_id, form.leitweg_id, form.buyer_reference, form.notes, auth.id
+        customer.vat_id, notes, auth.id
     ).execute(&state.db).await?.last_insert_rowid();
+
+    let (subtotal, tax_amount, total) = insert_items(&state.db, id, &form).await?;
+    sqlx::query!(
+        "UPDATE invoices SET subtotal=?, tax_amount=?, total=? WHERE id=?",
+        subtotal, tax_amount, total, id
+    ).execute(&state.db).await?;
 
     audit::log(&state.db, Some(&auth), "create", "invoice", Some(&id.to_string()),
         Some(&format!("Created invoice: {}", number)), None, true).await;
@@ -211,6 +246,16 @@ pub async fn edit_form(
     let customers = sqlx::query!("SELECT id, name FROM customers WHERE status='active' ORDER BY name LIMIT 200")
         .fetch_all(&state.db).await?;
 
+    let items = sqlx::query!("SELECT * FROM invoice_items WHERE invoice_id=? ORDER BY position", id)
+        .fetch_all(&state.db).await?;
+    let item_list: Vec<serde_json::Value> = items.into_iter().map(|i| serde_json::json!({
+        "description": i.name,
+        "quantity": i.quantity,
+        "unit": i.unit,
+        "unit_price": i.unit_price,
+        "vat_rate": i.tax_rate,
+    })).collect();
+
     state.render("invoices/form.html", minijinja::context! {
         app_name => &state.config.app_name,
         user => &auth,
@@ -218,12 +263,10 @@ pub async fn edit_form(
             "id": invoice.id, "customer_id": invoice.customer_id, "invoice_type": invoice.invoice_type,
             "invoice_date": invoice.invoice_date, "delivery_date": invoice.delivery_date,
             "due_date": invoice.due_date, "payment_terms": invoice.payment_terms,
-            "notes": invoice.notes, "leitweg_id": invoice.leitweg_id,
-            "buyer_reference": invoice.buyer_reference,
+            "notes": invoice.notes,
+            "items": item_list,
         }),
         customers => customers.into_iter().map(|c| serde_json::json!({"id": c.id, "name": c.name})).collect::<Vec<_>>(),
-        title => "Rechnung bearbeiten",
-        action => format!("/invoices/{}/edit", id),
     })
 }
 
@@ -235,12 +278,30 @@ pub async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(INVOICES_WRITE)?;
 
+    let invoice = sqlx::query!("SELECT id, status FROM invoices WHERE id=?", id)
+        .fetch_optional(&state.db).await?.ok_or(AppError::NotFound)?;
+    if invoice.status != "draft" && !auth.is_superadmin {
+        return Err(AppError::bad_request("Nur Entwürfe können bearbeitet werden"));
+    }
+
+    let invoice_date = form.invoice_date.as_deref().filter(|v| !v.is_empty()).unwrap_or("");
+    let delivery_date = form.delivery_date.as_ref().filter(|v| !v.is_empty()).map(|v| v.as_str());
+    let payment_terms = form.payment_terms.as_deref().filter(|v| !v.is_empty());
+    let notes = form.notes.as_deref().filter(|v| !v.is_empty());
+
     sqlx::query!(
-        "UPDATE invoices SET invoice_date=?, delivery_date=?, due_date=?,
-         payment_terms=?, notes=?, leitweg_id=?, buyer_reference=?,
-         updated_at=datetime('now') WHERE id=? AND status='draft'",
-        form.invoice_date, form.delivery_date, form.due_date,
-        form.payment_terms, form.notes, form.leitweg_id, form.buyer_reference, id
+        "UPDATE invoices SET invoice_date=?, delivery_date=?, payment_terms=?, notes=?,
+         updated_at=datetime('now') WHERE id=?",
+        invoice_date, delivery_date, payment_terms, notes, id
+    ).execute(&state.db).await?;
+
+    sqlx::query!("DELETE FROM invoice_items WHERE invoice_id=?", id)
+        .execute(&state.db).await?;
+
+    let (subtotal, tax_amount, total) = insert_items(&state.db, id, &form).await?;
+    sqlx::query!(
+        "UPDATE invoices SET subtotal=?, tax_amount=?, total=? WHERE id=?",
+        subtotal, tax_amount, total, id
     ).execute(&state.db).await?;
 
     audit::log(&state.db, Some(&auth), "update", "invoice", Some(&id.to_string()), None, None, true).await;

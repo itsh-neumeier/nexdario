@@ -15,8 +15,6 @@
 {% endif %}
 
 <form method="post" action="{% if invoice %}/invoices/{{ invoice.id }}{% else %}/invoices{% endif %}">
-  {% if customer_id %}<input type="hidden" name="customer_id" value="{{ customer_id }}">{% endif %}
-  {% if quote_id %}<input type="hidden" name="quote_id" value="{{ quote_id }}">{% endif %}
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <div class="card">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Rechnungsdaten</h3>
@@ -26,19 +24,15 @@
           <select name="customer_id" required class="form-input">
             <option value="">— Bitte wählen —</option>
             {% for cust in customers %}
-            <option value="{{ cust.id }}" {% if (invoice.customer_id == cust.id) or (customer_id == cust.id|string) %}selected{% endif %}>
+            <option value="{{ cust.id }}" {% if invoice.customer_id == cust.id %}selected{% endif %}>
               {{ cust.name }}
             </option>
             {% endfor %}
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Titel <span class="text-red-500">*</span></label>
-          <input type="text" name="title" value="{{ invoice.title }}" required class="form-input">
-        </div>
-        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Rechnungsdatum</label>
-          <input type="date" name="invoice_date" value="{{ invoice.invoice_date }}" class="form-input">
+          <input type="date" name="invoice_date" value="{{ invoice.invoice_date or today }}" class="form-input">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Lieferdatum</label>
@@ -48,22 +42,9 @@
           <label class="block text-sm font-medium text-gray-700 mb-1">Zahlungsziel (Tage)</label>
           <input type="number" name="payment_terms" value="{{ invoice.payment_terms or 14 }}" class="form-input" min="0">
         </div>
-      </div>
-    </div>
-    <div class="card">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Texte</h3>
-      <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Einleitungstext</label>
-          <textarea name="intro_text" rows="3" class="form-input">{{ invoice.intro_text }}</textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Schlusstext</label>
-          <textarea name="footer_text" rows="3" class="form-input">{{ invoice.footer_text }}</textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Interne Notizen</label>
-          <textarea name="notes" rows="2" class="form-input">{{ invoice.notes }}</textarea>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+          <textarea name="notes" rows="3" class="form-input">{{ invoice.notes }}</textarea>
         </div>
       </div>
     </div>
