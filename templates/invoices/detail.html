@@ -5,8 +5,8 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1 class="page-title">{{ invoice.title }}</h1>
-    <span class="text-sm text-gray-500 font-mono">{{ invoice.invoice_number }}</span>
+    <h1 class="page-title">{{ invoice.invoice_number }}</h1>
+    <span class="text-sm text-gray-500">{{ invoice.customer_name }}</span>
   </div>
   <div class="flex gap-2">
     {% if invoice.status == "draft" %}
@@ -66,10 +66,10 @@
     <h3 class="text-lg font-semibold text-gray-900 mb-3">Rechnungsadresse</h3>
     <address class="text-sm text-gray-700 not-italic space-y-1">
       <p class="font-medium">{{ invoice.customer_name }}</p>
-      {% if invoice.billing_street %}<p>{{ invoice.billing_street }}</p>{% endif %}
-      {% if invoice.billing_zip or invoice.billing_city %}<p>{{ invoice.billing_zip }} {{ invoice.billing_city }}</p>{% endif %}
-      {% if invoice.billing_country %}<p>{{ invoice.billing_country }}</p>{% endif %}
-      {% if invoice.vat_id %}<p class="mt-2 text-gray-500">USt-ID: {{ invoice.vat_id }}</p>{% endif %}
+      {% if invoice.customer_street %}<p>{{ invoice.customer_street }}</p>{% endif %}
+      {% if invoice.customer_zip or invoice.customer_city %}<p>{{ invoice.customer_zip }} {{ invoice.customer_city }}</p>{% endif %}
+      {% if invoice.customer_country %}<p>{{ invoice.customer_country }}</p>{% endif %}
+      {% if invoice.customer_vat_id %}<p class="mt-2 text-gray-500">USt-ID: {{ invoice.customer_vat_id }}</p>{% endif %}
     </address>
   </div>
 
