@@ -19,7 +19,7 @@ pub async fn suggest_hostname(
 
     let site_code = if let Some(loc_id) = q.location_id {
         sqlx::query_scalar!("SELECT site_code FROM locations WHERE id=?", loc_id)
-            .fetch_optional(&state.db).await?.flatten()
+            .fetch_optional(&state.db).await?
             .unwrap_or_else(|| "SITE".to_string())
     } else {
         "SITE".to_string()
