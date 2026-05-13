@@ -6,7 +6,13 @@
 <div class="page-header">
   <div>
     <h1 class="page-title font-mono">{{ asset.hostname }}</h1>
-    <span class="text-sm text-gray-500">{{ asset.asset_type }} — {{ asset.manufacturer }} {{ asset.model }}</span>
+    <div class="flex items-center gap-2 mt-1">
+      <span class="font-mono text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{{ asset.device_type }}</span>
+      {% if asset.role %}<span class="text-xs text-gray-500">{{ asset.role }}</span>{% endif %}
+      {% if asset.manufacturer or asset.model %}
+      <span class="text-sm text-gray-500">— {{ asset.manufacturer }} {{ asset.model }}</span>
+      {% endif %}
+    </div>
   </div>
   <div class="flex gap-2">
     <a href="/assets/{{ asset.id }}/edit" class="btn btn-secondary">Bearbeiten</a>
@@ -15,10 +21,11 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Gerät -->
   <div class="card">
     <h3 class="text-lg font-semibold text-gray-900 mb-3">Gerät</h3>
     <dl class="space-y-2">
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Standort</dt>
         <dd class="text-sm">
           {% if asset.location_id %}
@@ -26,18 +33,24 @@
           {% else %}–{% endif %}
         </dd>
       </div>
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Typ</dt>
-        <dd class="text-sm text-gray-900">{{ asset.asset_type }}</dd>
+        <dd><span class="font-mono text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">{{ asset.device_type }}</span></dd>
       </div>
-      <div>
+      {% if asset.role %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Rolle</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ asset.role }}</dd>
+      </div>
+      {% endif %}
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Status</dt>
         <dd>
           {% if asset.status == "active" %}
             <span class="badge badge-green">Aktiv</span>
           {% elif asset.status == "maintenance" %}
             <span class="badge badge-yellow">Wartung</span>
-          {% elif asset.status == "retired" %}
+          {% elif asset.status == "retired" or asset.status == "decommissioned" %}
             <span class="badge badge-red">Ausgemustert</span>
           {% else %}
             <span class="badge badge-gray">{{ asset.status }}</span>
@@ -45,84 +58,102 @@
         </dd>
       </div>
       {% if asset.serial_number %}
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Seriennummer</dt>
         <dd class="text-sm font-mono text-gray-900">{{ asset.serial_number }}</dd>
       </div>
       {% endif %}
       {% if asset.firmware_version %}
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Firmware</dt>
         <dd class="text-sm font-mono text-gray-900">{{ asset.firmware_version }}</dd>
       </div>
       {% endif %}
-      {% if asset.purchase_date %}
-      <div>
-        <dt class="text-xs text-gray-500">Kaufdatum</dt>
-        <dd class="text-sm text-gray-900">{{ asset.purchase_date | format_date }}</dd>
+      {% if asset.warranty_until %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Garantie bis</dt>
+        <dd class="text-sm text-gray-900">{{ asset.warranty_until }}</dd>
       </div>
       {% endif %}
-      {% if asset.warranty_until %}
-      <div>
-        <dt class="text-xs text-gray-500">Garantie bis</dt>
-        <dd class="text-sm text-gray-900">{{ asset.warranty_until | format_date }}</dd>
+      {% if asset.maintenance_until %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Wartung bis</dt>
+        <dd class="text-sm text-gray-900">{{ asset.maintenance_until }}</dd>
       </div>
       {% endif %}
     </dl>
   </div>
 
+  <!-- Netzwerk -->
   <div class="card">
     <h3 class="text-lg font-semibold text-gray-900 mb-3">Netzwerk</h3>
     <dl class="space-y-2">
-      {% if asset.ip_address %}
-      <div>
-        <dt class="text-xs text-gray-500">IP-Adresse</dt>
-        <dd class="text-sm font-mono text-gray-900">{{ asset.ip_address }}</dd>
+      {% if asset.management_ip %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Management-IP</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ asset.management_ip }}</dd>
       </div>
       {% endif %}
       {% if asset.mac_address %}
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">MAC</dt>
         <dd class="text-sm font-mono text-gray-900">{{ asset.mac_address }}</dd>
       </div>
       {% endif %}
-      {% if asset.vlan %}
-      <div>
-        <dt class="text-xs text-gray-500">VLAN</dt>
-        <dd class="text-sm font-mono text-gray-900">{{ asset.vlan }}</dd>
-      </div>
-      {% endif %}
-      {% if asset.management_url %}
-      <div>
-        <dt class="text-xs text-gray-500">Management</dt>
-        <dd class="text-sm"><a href="{{ asset.management_url }}" target="_blank" class="text-blue-600">Öffnen →</a></dd>
+      {% if asset.unifi_controller_url %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Controller</dt>
+        <dd class="text-sm"><a href="{{ asset.unifi_controller_url }}" target="_blank" class="text-blue-600">Öffnen →</a></dd>
       </div>
       {% endif %}
     </dl>
+    {% if asset.description %}
+    <div class="mt-3 pt-3 border-t border-gray-100">
+      <p class="text-xs text-gray-500 mb-1">Beschreibung</p>
+      <p class="text-sm text-gray-700">{{ asset.description }}</p>
+    </div>
+    {% endif %}
   </div>
 
+  <!-- UniFi -->
   <div class="card">
     <h3 class="text-lg font-semibold text-gray-900 mb-3">UniFi</h3>
     <dl class="space-y-2">
-      {% if asset.unifi_site_id %}
-      <div>
-        <dt class="text-xs text-gray-500">Site ID</dt>
-        <dd class="text-sm font-mono text-gray-900">{{ asset.unifi_site_id }}</dd>
+      {% if asset.unifi_site %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Site</dt>
+        <dd class="text-sm font-mono text-gray-900">{{ asset.unifi_site }}</dd>
       </div>
       {% endif %}
       {% if asset.unifi_device_id %}
-      <div>
+      <div class="flex justify-between">
         <dt class="text-xs text-gray-500">Device ID</dt>
         <dd class="text-sm font-mono text-gray-900">{{ asset.unifi_device_id }}</dd>
       </div>
       {% endif %}
+      {% if asset.unifi_adoption_status %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Adoption</dt>
+        <dd class="text-sm text-gray-900">{{ asset.unifi_adoption_status }}</dd>
+      </div>
+      {% endif %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Online</dt>
+        <dd>
+          {% if asset.unifi_online %}
+            <span class="badge badge-green">Online</span>
+          {% else %}
+            <span class="badge badge-gray">–</span>
+          {% endif %}
+        </dd>
+      </div>
+      {% if asset.unifi_clients_current %}
+      <div class="flex justify-between">
+        <dt class="text-xs text-gray-500">Clients</dt>
+        <dd class="text-sm text-gray-900">{{ asset.unifi_clients_current }}</dd>
+      </div>
+      {% endif %}
     </dl>
-    {% if asset.notes %}
-    <div class="mt-3 pt-3 border-t border-gray-100">
-      <p class="text-xs text-gray-500 mb-1">Notizen</p>
-      <p class="text-sm text-gray-700">{{ asset.notes }}</p>
-    </div>
-    {% endif %}
   </div>
 </div>
 

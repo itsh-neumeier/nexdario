@@ -132,6 +132,8 @@ pub async fn detail(
             "access_notes": loc.access_notes, "opening_hours": loc.opening_hours,
             "parking_notes": loc.parking_notes, "technical_notes": loc.technical_notes,
             "service_notes": loc.service_notes, "status": loc.status,
+            "location_type": loc.location_type, "notes": loc.notes,
+            "state": loc.state,
             "network_range": loc.network_range,
             "vlan_ids": loc.vlan_ids,
             "dns_servers": loc.dns_servers,
@@ -148,10 +150,13 @@ pub async fn detail(
 pub struct LocationForm {
     pub name: String,
     pub customer_id: i64,
+    pub location_type: Option<String>,
+    pub notes: Option<String>,
     pub street: Option<String>,
     pub house_number: Option<String>,
     pub zip: Option<String>,
     pub city: Option<String>,
+    pub state: Option<String>,
     pub country: Option<String>,
     pub building: Option<String>,
     pub floor: Option<String>,
@@ -214,13 +219,14 @@ pub async fn create(
     let status = form.status.as_deref().unwrap_or("active");
 
     let id = sqlx::query!(
-        "INSERT INTO locations (site_code, name, customer_id, street, house_number, zip, city, country,
+        "INSERT INTO locations (site_code, name, customer_id, location_type, notes,
+         street, house_number, zip, city, state, country,
          building, floor, room_notes, rack_notes, access_notes, opening_hours, parking_notes,
          technical_notes, internal_notes, service_notes, status,
          network_range, vlan_ids, dns_servers)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        site_code, form.name, form.customer_id, form.street, form.house_number,
-        form.zip, form.city, country,
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        site_code, form.name, form.customer_id, form.location_type, form.notes,
+        form.street, form.house_number, form.zip, form.city, form.state, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,
         form.internal_notes, form.service_notes, status,
@@ -254,8 +260,9 @@ pub async fn edit_form(
         user => &auth,
         location => serde_json::json!({
             "id": loc.id, "site_code": loc.site_code, "name": loc.name,
-            "customer_id": loc.customer_id, "street": loc.street, "house_number": loc.house_number,
-            "zip": loc.zip, "city": loc.city, "country": loc.country,
+            "customer_id": loc.customer_id, "location_type": loc.location_type, "notes": loc.notes,
+            "street": loc.street, "house_number": loc.house_number,
+            "zip": loc.zip, "city": loc.city, "state": loc.state, "country": loc.country,
             "building": loc.building, "floor": loc.floor,
             "room_notes": loc.room_notes, "rack_notes": loc.rack_notes,
             "access_notes": loc.access_notes, "opening_hours": loc.opening_hours,
@@ -284,12 +291,14 @@ pub async fn update(
     let status = form.status.as_deref().unwrap_or("active");
 
     sqlx::query!(
-        "UPDATE locations SET name=?, customer_id=?, street=?, house_number=?, zip=?, city=?, country=?,
+        "UPDATE locations SET name=?, customer_id=?, location_type=?, notes=?,
+         street=?, house_number=?, zip=?, city=?, state=?, country=?,
          building=?, floor=?, room_notes=?, rack_notes=?, access_notes=?, opening_hours=?,
          parking_notes=?, technical_notes=?, internal_notes=?, service_notes=?, status=?,
          network_range=?, vlan_ids=?, dns_servers=?,
          updated_at=datetime('now') WHERE id=?",
-        form.name, form.customer_id, form.street, form.house_number, form.zip, form.city, country,
+        form.name, form.customer_id, form.location_type, form.notes,
+        form.street, form.house_number, form.zip, form.city, form.state, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,
         form.internal_notes, form.service_notes, status,
