@@ -6,6 +6,7 @@ use axum::{
 use tower_http::services::ServeDir;
 
 pub mod api;
+pub mod asset_types;
 pub mod assets;
 pub mod auth;
 pub mod backup;
@@ -57,6 +58,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/assets/:id", get(assets::detail).post(assets::update))
         .route("/assets/:id/edit", get(assets::edit_form))
         .route("/assets/:id/delete", post(assets::delete))
+        // Asset Types
+        .route("/asset-types", get(asset_types::list).post(asset_types::create))
+        .route("/asset-types/:id", post(asset_types::update))
+        .route("/asset-types/:id/delete", post(asset_types::delete))
         // Users
         .route("/users", get(users::list).post(users::create))
         .route("/users/new", get(users::new_form))

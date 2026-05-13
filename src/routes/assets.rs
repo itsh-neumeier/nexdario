@@ -126,13 +126,19 @@ pub async fn new_form(
     let locations = sqlx::query!("SELECT id, name, site_code, customer_id FROM locations WHERE status='active' ORDER BY name LIMIT 500")
         .fetch_all(&state.db).await?;
 
+    let db_types = sqlx::query!(
+        "SELECT code, label FROM asset_device_types WHERE is_active=1 ORDER BY sort_order, code"
+    ).fetch_all(&state.db).await?;
+    let device_types: Vec<serde_json::Value> = db_types.into_iter()
+        .map(|t| serde_json::json!({"code": t.code, "label": t.label})).collect();
+
     state.render("assets/form.html", minijinja::context! {
         app_name => &state.config.app_name,
         user => &auth,
         asset => Option::<serde_json::Value>::None,
         customers => customers.into_iter().map(|c| serde_json::json!({"id": c.id, "name": c.name})).collect::<Vec<_>>(),
         locations => locations.into_iter().map(|l| serde_json::json!({"id": l.id, "name": l.name, "site_code": l.site_code, "customer_id": l.customer_id})).collect::<Vec<_>>(),
-        device_types => naming::DEVICE_TYPES,
+        device_types => device_types,
         device_roles => naming::DEVICE_ROLES,
         title => "Neues Asset",
         action => "/assets/new",
@@ -208,10 +214,15 @@ pub async fn edit_form(
         }),
         customers => customers.into_iter().map(|c| serde_json::json!({"id": c.id, "name": c.name})).collect::<Vec<_>>(),
         locations => locations.into_iter().map(|l| serde_json::json!({"id": l.id, "name": l.name, "site_code": l.site_code, "customer_id": l.customer_id})).collect::<Vec<_>>(),
-        device_types => naming::DEVICE_TYPES,
+        device_types => {
+            let db_types = sqlx::query!(
+                "SELECT code, label FROM asset_device_types WHERE is_active=1 ORDER BY sort_order, code"
+            ).fetch_all(&state.db).await?;
+            db_types.into_iter().map(|t| serde_json::json!({"code": t.code, "label": t.label})).collect::<Vec<_>>()
+        },
         device_roles => naming::DEVICE_ROLES,
         title => "Asset bearbeiten",
-        action => format!("/assets/{}/edit", id),
+        action => format!("/assets/{}", id),
     })
 }
 

@@ -145,6 +145,7 @@ pub struct LocationForm {
     pub name: String,
     pub customer_id: i64,
     pub street: Option<String>,
+    pub house_number: Option<String>,
     pub zip: Option<String>,
     pub city: Option<String>,
     pub country: Option<String>,
@@ -159,6 +160,10 @@ pub struct LocationForm {
     pub internal_notes: Option<String>,
     pub service_notes: Option<String>,
     pub status: Option<String>,
+    // Network fields
+    pub network_range: Option<String>,
+    pub vlan_ids: Option<String>,
+    pub dns_servers: Option<String>,
 }
 
 pub async fn new_form(
@@ -205,14 +210,17 @@ pub async fn create(
     let status = form.status.as_deref().unwrap_or("active");
 
     let id = sqlx::query!(
-        "INSERT INTO locations (site_code, name, customer_id, street, zip, city, country,
+        "INSERT INTO locations (site_code, name, customer_id, street, house_number, zip, city, country,
          building, floor, room_notes, rack_notes, access_notes, opening_hours, parking_notes,
-         technical_notes, internal_notes, service_notes, status)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        site_code, form.name, form.customer_id, form.street, form.zip, form.city, country,
+         technical_notes, internal_notes, service_notes, status,
+         network_range, vlan_ids, dns_servers)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        site_code, form.name, form.customer_id, form.street, form.house_number,
+        form.zip, form.city, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,
-        form.internal_notes, form.service_notes, status
+        form.internal_notes, form.service_notes, status,
+        form.network_range, form.vlan_ids, form.dns_servers
     )
     .execute(&state.db).await?.last_insert_rowid();
 
@@ -242,12 +250,14 @@ pub async fn edit_form(
         user => &auth,
         location => serde_json::json!({
             "id": loc.id, "site_code": loc.site_code, "name": loc.name,
-            "customer_id": loc.customer_id, "street": loc.street, "zip": loc.zip,
-            "city": loc.city, "country": loc.country, "building": loc.building, "floor": loc.floor,
+            "customer_id": loc.customer_id, "street": loc.street, "house_number": loc.house_number,
+            "zip": loc.zip, "city": loc.city, "country": loc.country,
+            "building": loc.building, "floor": loc.floor,
             "room_notes": loc.room_notes, "rack_notes": loc.rack_notes,
             "access_notes": loc.access_notes, "opening_hours": loc.opening_hours,
             "parking_notes": loc.parking_notes, "technical_notes": loc.technical_notes,
             "service_notes": loc.service_notes, "status": loc.status,
+            "network_range": loc.network_range, "vlan_ids": loc.vlan_ids, "dns_servers": loc.dns_servers,
         }),
         customers => customer_opts,
         title => "Standort bearbeiten",
@@ -270,14 +280,16 @@ pub async fn update(
     let status = form.status.as_deref().unwrap_or("active");
 
     sqlx::query!(
-        "UPDATE locations SET name=?, customer_id=?, street=?, zip=?, city=?, country=?,
+        "UPDATE locations SET name=?, customer_id=?, street=?, house_number=?, zip=?, city=?, country=?,
          building=?, floor=?, room_notes=?, rack_notes=?, access_notes=?, opening_hours=?,
          parking_notes=?, technical_notes=?, internal_notes=?, service_notes=?, status=?,
+         network_range=?, vlan_ids=?, dns_servers=?,
          updated_at=datetime('now') WHERE id=?",
-        form.name, form.customer_id, form.street, form.zip, form.city, country,
+        form.name, form.customer_id, form.street, form.house_number, form.zip, form.city, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,
-        form.internal_notes, form.service_notes, status, id
+        form.internal_notes, form.service_notes, status,
+        form.network_range, form.vlan_ids, form.dns_servers, id
     )
     .execute(&state.db).await?;
 

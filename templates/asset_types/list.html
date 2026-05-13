@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Asset-Typen{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Asset-Typen</h1>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Add new type -->
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Neuer Typ</h3>
+    <form method="post" action="/asset-types" class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Code <span class="text-red-500">*</span></label>
+          <input type="text" name="code" required maxlength="10" class="form-input font-mono uppercase" placeholder="GW">
+        </div>
+        <div>
+          <label class="form-label">Reihenfolge</label>
+          <input type="number" name="sort_order" value="100" class="form-input">
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Bezeichnung <span class="text-red-500">*</span></label>
+        <input type="text" name="label" required class="form-input" placeholder="Gateway">
+      </div>
+      <button type="submit" class="btn btn-primary">Hinzufügen</button>
+    </form>
+  </div>
+
+  <!-- Existing types -->
+  <div class="card">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Vorhandene Typen ({{ types | length }})</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead>
+          <tr>
+            <th class="table-header">Code</th>
+            <th class="table-header">Bezeichnung</th>
+            <th class="table-header">Reihenf.</th>
+            <th class="table-header">Aktiv</th>
+            <th class="table-header"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for t in types %}
+          <tr>
+            <td class="px-4 py-2 font-mono font-semibold text-blue-700">{{ t.code }}</td>
+            <td class="px-4 py-2">
+              <form method="post" action="/asset-types/{{ t.id }}" class="flex items-center gap-2">
+                <input type="text" name="label" value="{{ t.label }}" class="form-input py-1 text-sm w-36">
+                <input type="hidden" name="sort_order" value="{{ t.sort_order }}">
+                <input type="hidden" name="is_active" value="{% if t.is_active %}1{% else %}0{% endif %}">
+                <button type="submit" class="text-xs text-blue-600 hover:text-blue-800">✓</button>
+              </form>
+            </td>
+            <td class="px-4 py-2 text-gray-500">{{ t.sort_order }}</td>
+            <td class="px-4 py-2">
+              {% if t.is_active %}
+                <span class="badge badge-green">Ja</span>
+              {% else %}
+                <span class="badge badge-gray">Nein</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 text-right">
+              <form method="post" action="/asset-types/{{ t.id }}/delete" class="inline"
+                onsubmit="return confirm('Typ löschen?')">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-xs">Löschen</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
