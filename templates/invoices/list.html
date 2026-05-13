@@ -36,8 +36,7 @@
           <th class="table-header">Kunde</th>
           <th class="table-header">Datum</th>
           <th class="table-header">Fällig</th>
-          <th class="table-header text-right">Netto</th>
-          <th class="table-header text-right">Brutto</th>
+          <th class="table-header text-right">Betrag (Brutto)</th>
           <th class="table-header">Status</th>
           <th class="table-header"></th>
         </tr>
@@ -53,8 +52,7 @@
           <td class="table-cell text-sm {% if inv.status == 'overdue' %}text-red-600 font-medium{% else %}text-gray-500{% endif %}">
             {{ inv.due_date | format_date }}
           </td>
-          <td class="table-cell text-right font-mono text-sm">{{ inv.total_net | format_money }} €</td>
-          <td class="table-cell text-right font-mono text-sm font-medium">{{ inv.total_gross | format_money }} €</td>
+          <td class="table-cell text-right font-mono text-sm font-medium">{{ inv.total | format_money }} €</td>
           <td class="table-cell">
             {% if inv.status == "paid" %}
               <span class="badge badge-green">Bezahlt</span>

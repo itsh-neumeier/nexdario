@@ -15,7 +15,7 @@ pub async fn list(
     let items: Vec<serde_json::Value> = if let Some(lid) = q.location_id {
         sqlx::query!(
             "SELECT w.id, w.name, w.provider, w.connection_type, w.role, w.status,
-             w.bandwidth_down, w.bandwidth_up, w.location_id, l.name as location_name
+             w.bandwidth_down, w.bandwidth_up, w.static_ipv4, w.location_id, l.name as location_name
              FROM wan_connections w LEFT JOIN locations l ON l.id=w.location_id
              WHERE w.location_id=? ORDER BY w.role, w.name", lid
         ).fetch_all(&state.db).await?
@@ -23,12 +23,13 @@ pub async fn list(
             "id": w.id, "name": w.name, "provider": w.provider, "connection_type": w.connection_type,
             "role": w.role, "status": w.status,
             "bandwidth_down": w.bandwidth_down, "bandwidth_up": w.bandwidth_up,
+            "static_ipv4": w.static_ipv4,
             "location_id": w.location_id, "location_name": w.location_name,
         })).collect()
     } else {
         sqlx::query!(
             "SELECT w.id, w.name, w.provider, w.connection_type, w.role, w.status,
-             w.bandwidth_down, w.bandwidth_up, w.location_id, l.name as location_name
+             w.bandwidth_down, w.bandwidth_up, w.static_ipv4, w.location_id, l.name as location_name
              FROM wan_connections w LEFT JOIN locations l ON l.id=w.location_id
              ORDER BY l.name, w.role, w.name LIMIT 200"
         ).fetch_all(&state.db).await?
@@ -36,6 +37,7 @@ pub async fn list(
             "id": w.id, "name": w.name, "provider": w.provider, "connection_type": w.connection_type,
             "role": w.role, "status": w.status,
             "bandwidth_down": w.bandwidth_down, "bandwidth_up": w.bandwidth_up,
+            "static_ipv4": w.static_ipv4,
             "location_id": w.location_id, "location_name": w.location_name,
         })).collect()
     };

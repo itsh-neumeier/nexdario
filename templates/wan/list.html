@@ -18,7 +18,6 @@
           <th class="table-header">Typ</th>
           <th class="table-header">Bandbreite</th>
           <th class="table-header">IP</th>
-          <th class="table-header">Vertrag bis</th>
           <th class="table-header">Status</th>
           <th class="table-header"></th>
         </tr>
@@ -33,9 +32,8 @@
           </td>
           <td class="table-cell font-medium text-gray-900">{{ w.provider }}</td>
           <td class="table-cell text-gray-500">{{ w.connection_type }}</td>
-          <td class="table-cell text-gray-600 font-mono text-sm">{{ w.download_mbps }}↓ / {{ w.upload_mbps }}↑</td>
-          <td class="table-cell font-mono text-xs text-gray-500">{{ w.ip_address or "DHCP" }}</td>
-          <td class="table-cell text-gray-500 text-sm">{{ w.contract_end | format_date if w.contract_end else "–" }}</td>
+          <td class="table-cell text-gray-600 font-mono text-sm">{{ w.bandwidth_down or "?" }}↓ / {{ w.bandwidth_up or "?" }}↑ Mbit/s</td>
+          <td class="table-cell font-mono text-xs text-gray-500">{{ w.static_ipv4 or "DHCP" }}</td>
           <td class="table-cell">
             {% if w.status == "active" %}
               <span class="badge badge-green">Aktiv</span>

@@ -37,8 +37,7 @@
           <th class="table-header">Kunde</th>
           <th class="table-header">Datum</th>
           <th class="table-header">Gültig bis</th>
-          <th class="table-header">Netto</th>
-          <th class="table-header">Brutto</th>
+          <th class="table-header text-right">Betrag (Brutto)</th>
           <th class="table-header">Status</th>
           <th class="table-header"></th>
         </tr>
@@ -53,8 +52,7 @@
           <td class="table-cell text-gray-600">{{ q.customer_name }}</td>
           <td class="table-cell text-gray-500 text-sm">{{ q.created_at | format_date }}</td>
           <td class="table-cell text-gray-500 text-sm">{{ q.valid_until | format_date if q.valid_until else "–" }}</td>
-          <td class="table-cell text-right font-mono text-sm">{{ q.total_net | format_money }} €</td>
-          <td class="table-cell text-right font-mono text-sm font-medium">{{ q.total_gross | format_money }} €</td>
+          <td class="table-cell text-right font-mono text-sm font-medium">{{ q.total | format_money }} €</td>
           <td class="table-cell">
             {% if q.status == "accepted" %}
               <span class="badge badge-green">Angenommen</span>
