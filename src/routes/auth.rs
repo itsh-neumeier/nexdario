@@ -165,7 +165,7 @@ pub async fn logout(
 }
 
 // Helper extractor wrapper
-struct OptUser(Option<crate::auth::AuthUser>);
+pub(crate) struct OptUser(Option<crate::auth::AuthUser>);
 
 #[axum::async_trait]
 impl<S> axum::extract::FromRequestParts<S> for OptUser
