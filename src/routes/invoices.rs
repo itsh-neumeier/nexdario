@@ -89,7 +89,7 @@ pub async fn detail(
 
 #[derive(Deserialize)]
 pub struct InvoiceForm {
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub invoice_date: String,
     pub delivery_date: Option<String>,
     pub due_date: Option<String>,
@@ -140,10 +140,11 @@ pub async fn create(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(INVOICES_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     // Get customer data for snapshot
     let customer = sqlx::query!(
         "SELECT name, billing_street, billing_zip, billing_city, billing_country, vat_id
-         FROM customers WHERE id=?", form.customer_id
+         FROM customers WHERE id=?", customer_id
     ).fetch_optional(&state.db).await?.ok_or_else(|| AppError::bad_request("Kunde nicht gefunden"))?;
 
     let number = db::next_number(&state.db, "invoice").await?;
@@ -179,7 +180,7 @@ pub async fn create(
          customer_name, customer_street, customer_zip, customer_city, customer_country,
          customer_vat_id, leitweg_id, buyer_reference, notes, created_by)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        number, form.customer_id, invoice_type, "draft", form.invoice_date,
+        number, customer_id, invoice_type, "draft", form.invoice_date,
         form.delivery_date, due_date, payment_terms_val,
         our_company, our_vat_id, our_iban, our_bic, our_street, our_zip, our_city,
         customer.name, customer.billing_street, customer.billing_zip,

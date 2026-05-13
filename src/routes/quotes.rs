@@ -81,7 +81,7 @@ pub async fn detail(
 
 #[derive(Deserialize)]
 pub struct QuoteForm {
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub location_id: Option<i64>,
     pub title: String,
     pub valid_until: Option<String>,
@@ -116,13 +116,14 @@ pub async fn create(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(QUOTES_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let number = db::next_number(&state.db, "quote").await?;
 
     let id = sqlx::query!(
         "INSERT INTO quotes (quote_number, customer_id, location_id, title, status, payment_terms,
          notes, internal_notes, valid_until, created_by)
          VALUES (?,?,?,?,'draft',?,?,?,?,?)",
-        number, form.customer_id, form.location_id, form.title,
+        number, customer_id, form.location_id, form.title,
         form.payment_terms, form.notes, form.internal_notes, form.valid_until, auth.id
     ).execute(&state.db).await?.last_insert_rowid();
 
@@ -172,10 +173,11 @@ pub async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(QUOTES_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     sqlx::query!(
         "UPDATE quotes SET customer_id=?, location_id=?, title=?, valid_until=?,
          payment_terms=?, notes=?, internal_notes=?, updated_at=datetime('now') WHERE id=?",
-        form.customer_id, form.location_id, form.title, form.valid_until,
+        customer_id, form.location_id, form.title, form.valid_until,
         form.payment_terms, form.notes, form.internal_notes, id
     ).execute(&state.db).await?;
 

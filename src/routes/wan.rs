@@ -52,7 +52,7 @@ pub async fn list(
 
 #[derive(Deserialize)]
 pub struct WanForm {
-    pub location_id: i64,
+    pub location_id: Option<i64>,
     pub name: String,
     pub provider: Option<String>,
     pub connection_type: Option<String>,
@@ -99,6 +99,7 @@ pub async fn create(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(WAN_WRITE)?;
 
+    let location_id = form.location_id.ok_or_else(|| AppError::bad_request("Standort ist erforderlich"))?;
     let role = form.role.as_deref().unwrap_or("PRIMARY");
     let status = form.status.as_deref().unwrap_or("active");
 
@@ -107,7 +108,7 @@ pub async fn create(
          circuit_id, customer_number, contract_number, bandwidth_down, bandwidth_up,
          static_ipv4, gateway, dns_primary, vlan_id, pppoe_username, notes)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        form.location_id, form.name, form.provider, form.connection_type, role, status,
+        location_id, form.name, form.provider, form.connection_type, role, status,
         form.circuit_id, form.customer_number, form.contract_number,
         form.bandwidth_down, form.bandwidth_up, form.static_ipv4, form.gateway,
         form.dns_primary, form.vlan_id, form.pppoe_username, form.notes
@@ -115,7 +116,7 @@ pub async fn create(
 
     audit::log(&state.db, Some(&auth), "create", "wan_connection", Some(&id.to_string()), None, None, true).await;
 
-    Ok(Redirect::to(&format!("/locations/{}", form.location_id)))
+    Ok(Redirect::to(&format!("/locations/{}", location_id)))
 }
 
 pub async fn edit_form(
@@ -160,6 +161,7 @@ pub async fn update(
     let existing = sqlx::query!("SELECT location_id FROM wan_connections WHERE id=?", id)
         .fetch_optional(&state.db).await?.ok_or(AppError::NotFound)?;
 
+    let location_id = form.location_id.ok_or_else(|| AppError::bad_request("Standort ist erforderlich"))?;
     let role = form.role.as_deref().unwrap_or("PRIMARY");
     let status = form.status.as_deref().unwrap_or("active");
 
@@ -168,7 +170,7 @@ pub async fn update(
          status=?, circuit_id=?, customer_number=?, contract_number=?, bandwidth_down=?, bandwidth_up=?,
          static_ipv4=?, gateway=?, dns_primary=?, vlan_id=?, pppoe_username=?, notes=?,
          updated_at=datetime('now') WHERE id=?",
-        form.location_id, form.name, form.provider, form.connection_type, role, status,
+        location_id, form.name, form.provider, form.connection_type, role, status,
         form.circuit_id, form.customer_number, form.contract_number,
         form.bandwidth_down, form.bandwidth_up, form.static_ipv4, form.gateway,
         form.dns_primary, form.vlan_id, form.pppoe_username, form.notes, id

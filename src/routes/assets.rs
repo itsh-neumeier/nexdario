@@ -111,7 +111,7 @@ pub async fn detail(
 #[derive(Deserialize)]
 pub struct AssetForm {
     pub hostname: String,
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub location_id: Option<i64>,
     pub device_type: String,
     pub role: Option<String>,
@@ -177,6 +177,7 @@ pub async fn create(
         return Err(AppError::bad_request("Ungültiges Hostname-Format. Nur A-Z, 0-9 und Bindestrich erlaubt."));
     }
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let status = form.status.as_deref().unwrap_or("active");
 
     let id = sqlx::query!(
@@ -184,7 +185,7 @@ pub async fn create(
          serial_number, mac_address, management_ip, firmware_version, status, description,
          warranty_until, maintenance_until, unifi_device_id, unifi_site, unifi_controller_url)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        hostname, form.customer_id, form.location_id, form.device_type, form.role,
+        hostname, customer_id, form.location_id, form.device_type, form.role,
         form.manufacturer, form.model, form.serial_number, form.mac_address,
         form.management_ip, form.firmware_version, status, form.description,
         form.warranty_until, form.maintenance_until,
@@ -252,6 +253,7 @@ pub async fn update(
     let _existing = sqlx::query!("SELECT id FROM assets WHERE id=?", id)
         .fetch_optional(&state.db).await?.ok_or(AppError::NotFound)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let hostname = form.hostname.trim().to_uppercase();
     let status = form.status.as_deref().unwrap_or("active");
 
@@ -261,7 +263,7 @@ pub async fn update(
          firmware_version=?, status=?, description=?, warranty_until=?, maintenance_until=?,
          unifi_device_id=?, unifi_site=?, unifi_controller_url=?,
          updated_at=datetime('now') WHERE id=?",
-        hostname, form.customer_id, form.location_id, form.device_type, form.role,
+        hostname, customer_id, form.location_id, form.device_type, form.role,
         form.manufacturer, form.model, form.serial_number, form.mac_address,
         form.management_ip, form.firmware_version, status, form.description,
         form.warranty_until, form.maintenance_until,

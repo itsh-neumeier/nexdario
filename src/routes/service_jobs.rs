@@ -90,7 +90,7 @@ pub async fn detail(
 
 #[derive(Deserialize)]
 pub struct ServiceJobForm {
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub location_id: Option<i64>,
     pub title: String,
     pub description: Option<String>,
@@ -131,6 +131,7 @@ pub async fn create(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(SERVICE_JOBS_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let number = db::next_number(&state.db, "service_job").await?;
     let priority = form.priority.as_deref().unwrap_or("normal");
     let is_billable = match form.is_billable.as_deref() { Some("on") | Some("1") => 1i64, _ => 1 };
@@ -139,7 +140,7 @@ pub async fn create(
         "INSERT INTO service_jobs (job_number, customer_id, location_id, title, description,
          priority, status, assigned_employee_id, scheduled_start, scheduled_end, is_billable, notes, created_by)
          VALUES (?,?,?,?,?,?,'open',?,?,?,?,?,?)",
-        number, form.customer_id, form.location_id, form.title, form.description,
+        number, customer_id, form.location_id, form.title, form.description,
         priority, form.assigned_employee_id, form.scheduled_start, form.scheduled_end,
         is_billable, form.notes, auth.id
     ).execute(&state.db).await?.last_insert_rowid();
@@ -190,6 +191,7 @@ pub async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(SERVICE_JOBS_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let priority = form.priority.as_deref().unwrap_or("normal");
     let is_billable = match form.is_billable.as_deref() { Some("on") | Some("1") => 1i64, _ => 1 };
 
@@ -197,7 +199,7 @@ pub async fn update(
         "UPDATE service_jobs SET customer_id=?, location_id=?, title=?, description=?,
          priority=?, assigned_employee_id=?, scheduled_start=?, scheduled_end=?,
          is_billable=?, notes=?, updated_at=datetime('now') WHERE id=?",
-        form.customer_id, form.location_id, form.title, form.description,
+        customer_id, form.location_id, form.title, form.description,
         priority, form.assigned_employee_id, form.scheduled_start, form.scheduled_end,
         is_billable, form.notes, id
     ).execute(&state.db).await?;

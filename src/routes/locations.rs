@@ -150,7 +150,7 @@ pub async fn detail(
 #[derive(Deserialize)]
 pub struct LocationForm {
     pub name: String,
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub location_type: Option<String>,
     pub notes: Option<String>,
     pub street: Option<String>,
@@ -209,6 +209,7 @@ pub async fn create(
     if form.name.trim().is_empty() {
         return Err(AppError::bad_request("Name ist erforderlich"));
     }
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
 
     // Generate site code
     let city = form.city.as_deref().unwrap_or("X");
@@ -226,7 +227,7 @@ pub async fn create(
          technical_notes, internal_notes, service_notes, status,
          network_range, vlan_ids, dns_servers)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        site_code, form.name, form.customer_id, form.location_type, form.notes,
+        site_code, form.name, customer_id, form.location_type, form.notes,
         form.street, form.house_number, form.zip, form.city, form.state, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,
@@ -288,6 +289,7 @@ pub async fn update(
     let _existing = sqlx::query!("SELECT id FROM locations WHERE id=?", id)
         .fetch_optional(&state.db).await?.ok_or(AppError::NotFound)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let country = form.country.as_deref().unwrap_or("DE");
     let status = form.status.as_deref().unwrap_or("active");
 
@@ -298,7 +300,7 @@ pub async fn update(
          parking_notes=?, technical_notes=?, internal_notes=?, service_notes=?, status=?,
          network_range=?, vlan_ids=?, dns_servers=?,
          updated_at=datetime('now') WHERE id=?",
-        form.name, form.customer_id, form.location_type, form.notes,
+        form.name, customer_id, form.location_type, form.notes,
         form.street, form.house_number, form.zip, form.city, form.state, country,
         form.building, form.floor, form.room_notes, form.rack_notes, form.access_notes,
         form.opening_hours, form.parking_notes, form.technical_notes,

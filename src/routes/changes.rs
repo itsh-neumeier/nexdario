@@ -72,7 +72,7 @@ pub async fn detail(
 
 #[derive(Deserialize)]
 pub struct ChangeForm {
-    pub customer_id: i64,
+    pub customer_id: Option<i64>,
     pub location_id: Option<i64>,
     pub category: String,
     pub title: String,
@@ -124,6 +124,7 @@ pub async fn create(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(CHANGES_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let number = db::next_number(&state.db, "change").await?;
     let risk_level = form.risk_level.as_deref().unwrap_or("low");
 
@@ -132,7 +133,7 @@ pub async fn create(
          description, status, risk_level, impact, rollback_plan, test_plan,
          scheduled_start, scheduled_end, maintenance_window, assigned_employee_id, created_by)
          VALUES (?,?,?,?,?,?,'draft',?,?,?,?,?,?,?,?,?)",
-        number, form.customer_id, form.location_id, form.category, form.title,
+        number, customer_id, form.location_id, form.category, form.title,
         form.description, risk_level, form.impact, form.rollback_plan, form.test_plan,
         form.scheduled_start, form.scheduled_end, form.maintenance_window,
         form.assigned_employee_id, auth.id
@@ -192,6 +193,7 @@ pub async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     auth.require_permission(CHANGES_WRITE)?;
 
+    let customer_id = form.customer_id.ok_or_else(|| AppError::bad_request("Kunde ist erforderlich"))?;
     let risk_level = form.risk_level.as_deref().unwrap_or("low");
 
     sqlx::query!(
@@ -199,7 +201,7 @@ pub async fn update(
          risk_level=?, impact=?, rollback_plan=?, test_plan=?,
          scheduled_start=?, scheduled_end=?, maintenance_window=?,
          assigned_employee_id=?, updated_at=datetime('now') WHERE id=?",
-        form.customer_id, form.location_id, form.category, form.title, form.description,
+        customer_id, form.location_id, form.category, form.title, form.description,
         risk_level, form.impact, form.rollback_plan, form.test_plan,
         form.scheduled_start, form.scheduled_end, form.maintenance_window,
         form.assigned_employee_id, id
