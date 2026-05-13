@@ -1,20 +1,30 @@
 use crate::{auth, config::Config, permissions};
 use anyhow::Context;
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::time::Duration;
+use sqlx::{sqlite::{SqliteConnectOptions, SqlitePoolOptions}, SqlitePool};
+use std::{str::FromStr, time::Duration};
 
 pub async fn create_pool(database_url: &str) -> anyhow::Result<SqlitePool> {
+    // Strip sqlite: prefix to get the file path for directory creation
+    let file_path = database_url
+        .strip_prefix("sqlite:///")
+        .map(|p| format!("/{}", p))
+        .or_else(|| database_url.strip_prefix("sqlite://").map(|p| p.to_string()))
+        .or_else(|| database_url.strip_prefix("sqlite:").map(|p| p.to_string()))
+        .unwrap_or_default();
+
     // Ensure parent directory exists
-    if let Some(path) = database_url.strip_prefix("sqlite:") {
-        if let Some(parent) = std::path::Path::new(path).parent() {
-            tokio::fs::create_dir_all(parent).await.ok();
-        }
+    if let Some(parent) = std::path::Path::new(&file_path).parent() {
+        tokio::fs::create_dir_all(parent).await.ok();
     }
+
+    let connect_opts = SqliteConnectOptions::from_str(database_url)
+        .context("Invalid DATABASE_URL")?
+        .create_if_missing(true);
 
     let pool = SqlitePoolOptions::new()
         .max_connections(10)
         .acquire_timeout(Duration::from_secs(5))
-        .connect(database_url)
+        .connect_with(connect_opts)
         .await
         .context("Failed to connect to SQLite database")?;
 
