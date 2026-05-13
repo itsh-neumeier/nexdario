@@ -25,7 +25,7 @@
       <tbody class="bg-white divide-y divide-gray-200">
         {% for e in employees %}
         <tr class="hover:bg-gray-50">
-          <td class="table-cell font-medium text-gray-900">{{ e.display_name }}</td>
+          <td class="table-cell font-medium text-gray-900">{{ e.first_name }} {{ e.last_name }}</td>
           <td class="table-cell text-gray-600">{{ e.email or "–" }}</td>
           <td class="table-cell text-gray-600">{{ e.phone or "–" }}</td>
           <td class="table-cell text-gray-500">{{ e.department or "–" }}</td>
