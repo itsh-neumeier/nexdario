@@ -24,10 +24,10 @@
         <dd><a href="/customers/{{ job.customer_id }}" class="text-blue-600 text-sm">{{ job.customer_name }}</a></dd>
       </div>
       {% endif %}
-      {% if job.location_id %}
+      {% if job.location_name %}
       <div>
         <dt class="text-xs text-gray-500">Standort</dt>
-        <dd><a href="/locations/{{ job.location_id }}" class="text-blue-600 text-sm">{{ job.location_name }}</a></dd>
+        <dd class="text-sm text-gray-900">{{ job.location_name }}</dd>
       </div>
       {% endif %}
       <div>
@@ -51,32 +51,40 @@
           {% endif %}
         </dd>
       </div>
+      <div>
+        <dt class="text-xs text-gray-500">Abrechenbar</dt>
+        <dd class="text-sm text-gray-900">{% if job.is_billable %}Ja{% else %}Nein{% endif %}</dd>
+      </div>
     </dl>
   </div>
 
   <div class="card">
     <h3 class="text-lg font-semibold text-gray-900 mb-3">Planung</h3>
     <dl class="space-y-2">
+      {% if job.scheduled_start %}
       <div>
-        <dt class="text-xs text-gray-500">Techniker</dt>
-        <dd class="text-sm text-gray-900">{{ job.technician_name or "Nicht zugewiesen" }}</dd>
-      </div>
-      {% if job.scheduled_date %}
-      <div>
-        <dt class="text-xs text-gray-500">Geplant</dt>
-        <dd class="text-sm text-gray-900">{{ job.scheduled_date | format_date }}{% if job.scheduled_time %} {{ job.scheduled_time }}{% endif %}</dd>
+        <dt class="text-xs text-gray-500">Geplanter Start</dt>
+        <dd class="text-sm text-gray-900">{{ job.scheduled_start | format_date }}</dd>
       </div>
       {% endif %}
-      {% if job.estimated_hours %}
+      {% if job.scheduled_end %}
       <div>
-        <dt class="text-xs text-gray-500">Geplant (Std.)</dt>
-        <dd class="text-sm text-gray-900">{{ job.estimated_hours }} h</dd>
+        <dt class="text-xs text-gray-500">Geplantes Ende</dt>
+        <dd class="text-sm text-gray-900">{{ job.scheduled_end | format_date }}</dd>
       </div>
       {% endif %}
+      {% if job.actual_start %}
       <div>
-        <dt class="text-xs text-gray-500">Tatsächlich (Std.)</dt>
-        <dd class="text-sm font-bold text-gray-900">{{ job.actual_hours or 0 }} h</dd>
+        <dt class="text-xs text-gray-500">Tatsächlicher Start</dt>
+        <dd class="text-sm text-gray-900">{{ job.actual_start | format_date }}</dd>
       </div>
+      {% endif %}
+      {% if job.actual_end %}
+      <div>
+        <dt class="text-xs text-gray-500">Abgeschlossen</dt>
+        <dd class="text-sm text-gray-900">{{ job.actual_end | format_date }}</dd>
+      </div>
+      {% endif %}
     </dl>
   </div>
 
@@ -114,18 +122,22 @@
     <thead>
       <tr>
         <th class="table-header">Datum</th>
-        <th class="table-header">Techniker</th>
-        <th class="table-header text-right">Stunden</th>
-        <th class="table-header">Notiz</th>
+        <th class="table-header">Mitarbeiter</th>
+        <th class="table-header">Aktivität</th>
+        <th class="table-header text-right">Dauer</th>
+        <th class="table-header">Beschreibung</th>
       </tr>
     </thead>
     <tbody class="bg-white divide-y divide-gray-200">
       {% for entry in time_entries %}
       <tr>
-        <td class="table-cell text-gray-500 text-sm">{{ entry.date | format_date }}</td>
-        <td class="table-cell text-gray-700">{{ entry.technician_name }}</td>
-        <td class="table-cell text-right font-mono text-sm">{{ entry.hours }} h</td>
-        <td class="table-cell text-gray-500 text-sm">{{ entry.notes or "–" }}</td>
+        <td class="table-cell text-gray-500 text-sm">{{ entry.started_at | format_date }}</td>
+        <td class="table-cell text-gray-700">{{ entry.employee_name or "–" }}</td>
+        <td class="table-cell text-gray-500 text-sm">{{ entry.activity_type or "–" }}</td>
+        <td class="table-cell text-right font-mono text-sm">
+          {% if entry.duration_minutes %}{{ (entry.duration_minutes / 60) | round(2) }} h{% else %}–{% endif %}
+        </td>
+        <td class="table-cell text-gray-500 text-sm">{{ entry.description or "–" }}</td>
       </tr>
       {% endfor %}
     </tbody>

@@ -166,7 +166,7 @@
         <td class="table-cell text-gray-900">{{ wan.provider }}</td>
         <td class="table-cell text-gray-500">{{ wan.connection_type }}</td>
         <td class="table-cell text-gray-600">{{ wan.bandwidth_down or "?" }}↓ / {{ wan.bandwidth_up or "?" }}↑ Mbit/s</td>
-        <td class="table-cell font-mono text-xs text-gray-500">{{ wan.ip_address or "DHCP" }}</td>
+        <td class="table-cell font-mono text-xs text-gray-500">{{ wan.static_ipv4 or "DHCP" }}</td>
         <td class="table-cell">
           {% if wan.status == "active" %}
             <span class="badge badge-green">Aktiv</span>

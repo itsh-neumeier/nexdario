@@ -65,7 +65,7 @@ pub async fn detail(
 
     // Load WAN connections
     let wan_connections = sqlx::query!(
-        "SELECT id, name, provider, connection_type, role, status, bandwidth_down, bandwidth_up
+        "SELECT id, name, provider, connection_type, role, status, bandwidth_down, bandwidth_up, static_ipv4
          FROM wan_connections WHERE location_id = ? ORDER BY role, name",
         id
     ).fetch_all(&state.db).await?;
@@ -102,6 +102,7 @@ pub async fn detail(
         "id": w.id, "name": w.name, "provider": w.provider, "connection_type": w.connection_type,
         "role": w.role, "status": w.status,
         "bandwidth_down": w.bandwidth_down, "bandwidth_up": w.bandwidth_up,
+        "static_ipv4": w.static_ipv4,
     })).collect();
 
     let contact_list: Vec<serde_json::Value> = contacts.into_iter().map(|c| serde_json::json!({

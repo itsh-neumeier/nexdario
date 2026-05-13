@@ -214,7 +214,7 @@
             <a href="/quotes/{{ q.id }}" class="text-blue-600 hover:text-blue-800">{{ q.title }}</a>
           </td>
           <td class="table-cell text-gray-500 text-sm">{{ q.created_at | format_date }}</td>
-          <td class="table-cell text-gray-900">{{ q.total_gross | format_money }} €</td>
+          <td class="table-cell text-gray-900">{{ q.total | format_money }} €</td>
           <td class="table-cell"><span class="badge badge-gray">{{ q.status }}</span></td>
         </tr>
         {% endfor %}
@@ -250,7 +250,7 @@
           </td>
           <td class="table-cell text-gray-500 text-sm">{{ inv.invoice_date | format_date }}</td>
           <td class="table-cell text-gray-500 text-sm">{{ inv.due_date | format_date }}</td>
-          <td class="table-cell text-gray-900">{{ inv.total_gross | format_money }} €</td>
+          <td class="table-cell text-gray-900">{{ inv.total | format_money }} €</td>
           <td class="table-cell">
             {% if inv.status == "overdue" %}
               <span class="badge badge-red">Überfällig</span>
