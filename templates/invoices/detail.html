@@ -125,30 +125,33 @@
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-        {% for item in invoice.items %}
+        {% for item in items %}
         <tr>
           <td class="table-cell text-gray-400">{{ loop.index }}</td>
-          <td class="table-cell text-gray-900">{{ item.description }}</td>
+          <td class="table-cell">
+            <p class="text-gray-900 font-medium">{{ item.name }}</p>
+            {% if item.description %}<p class="text-gray-500 text-xs mt-0.5">{{ item.description }}</p>{% endif %}
+          </td>
           <td class="table-cell text-right font-mono text-sm">{{ item.quantity }}</td>
           <td class="table-cell text-gray-500">{{ item.unit }}</td>
           <td class="table-cell text-right font-mono text-sm">{{ item.unit_price | format_money }} €</td>
-          <td class="table-cell text-right text-gray-500 text-sm">{{ item.vat_rate }}%</td>
-          <td class="table-cell text-right font-mono text-sm font-medium">{{ item.line_total | format_money }} €</td>
+          <td class="table-cell text-right text-gray-500 text-sm">{{ item.tax_rate }}%</td>
+          <td class="table-cell text-right font-mono text-sm font-medium">{{ item.subtotal | format_money }} €</td>
         </tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr class="bg-gray-50">
           <td colspan="6" class="table-cell text-right font-semibold text-gray-700">Netto</td>
-          <td class="table-cell text-right font-mono font-semibold">{{ invoice.total_net | format_money }} €</td>
+          <td class="table-cell text-right font-mono font-semibold">{{ invoice.subtotal | format_money }} €</td>
         </tr>
         <tr class="bg-gray-50">
           <td colspan="6" class="table-cell text-right text-gray-700">MwSt.</td>
-          <td class="table-cell text-right font-mono">{{ (invoice.total_gross - invoice.total_net) | format_money }} €</td>
+          <td class="table-cell text-right font-mono">{{ invoice.tax_amount | format_money }} €</td>
         </tr>
         <tr class="bg-gray-50">
           <td colspan="6" class="table-cell text-right font-bold text-gray-900">Brutto</td>
-          <td class="table-cell text-right font-mono font-bold text-gray-900 text-base">{{ invoice.total_gross | format_money }} €</td>
+          <td class="table-cell text-right font-mono font-bold text-gray-900 text-base">{{ invoice.total | format_money }} €</td>
         </tr>
       </tfoot>
     </table>
