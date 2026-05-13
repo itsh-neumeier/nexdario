@@ -55,15 +55,18 @@ jobs:
   make-public:
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       packages: write
     steps:
       - name: Make package public
+        # Requires PAT with write:packages scope stored as PACKAGES_TOKEN secret.
+        # Falls back gracefully if secret not set or permission denied.
         run: |
           gh api \
             --method PATCH \
             -H "Accept: application/vnd.github+json" \
             /user/packages/container/nexdario \
-            -f visibility=public
+            -f visibility=public || echo "Could not set visibility (needs PAT with write:packages). Set manually in GHCR settings."
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
