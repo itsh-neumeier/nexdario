@@ -168,6 +168,10 @@ pub async fn create(
     let our_zip = get_setting(&state, "invoice_zip").await;
     let our_city = get_setting(&state, "invoice_city").await;
 
+    let payment_terms_days_str = payment_terms_days.to_string();
+    let payment_terms_val = form.payment_terms.as_deref().unwrap_or(&payment_terms_days_str);
+    let billing_country = customer.billing_country.as_str();
+
     let id = sqlx::query!(
         "INSERT INTO invoices (invoice_number, customer_id, invoice_type, status, invoice_date,
          delivery_date, due_date, payment_terms, our_company_name, our_vat_id, our_iban, our_bic,
@@ -176,10 +180,10 @@ pub async fn create(
          customer_vat_id, leitweg_id, buyer_reference, notes, created_by)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         number, form.customer_id, invoice_type, "draft", form.invoice_date,
-        form.delivery_date, due_date, form.payment_terms.as_deref().unwrap_or(&payment_terms_days.to_string()),
+        form.delivery_date, due_date, payment_terms_val,
         our_company, our_vat_id, our_iban, our_bic, our_street, our_zip, our_city,
         customer.name, customer.billing_street, customer.billing_zip,
-        customer.billing_city, customer.billing_country.as_deref().unwrap_or("DE"),
+        customer.billing_city, billing_country,
         customer.vat_id, form.leitweg_id, form.buyer_reference, form.notes, auth.id
     ).execute(&state.db).await?.last_insert_rowid();
 

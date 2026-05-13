@@ -70,7 +70,7 @@ pub async fn login(
                 // Create session
                 let token = match auth_utils::create_session(
                     &state.db,
-                    row.id,
+                    row.id as i64,
                     ip.as_deref(),
                     ua.as_deref(),
                     8,
@@ -93,7 +93,7 @@ pub async fn login(
                 .await
                 .ok();
 
-                audit::log_login(&state.db, row.id, &row.username, ip.as_deref(), true).await;
+                audit::log_login(&state.db, row.id as i64, &row.username, ip.as_deref(), true).await;
 
                 let redirect_to = form
                     .redirect_to
@@ -111,7 +111,7 @@ pub async fn login(
                     .unwrap()
             } else {
                 // Log failed attempt
-                audit::log_login(&state.db, row.id, &row.username, ip.as_deref(), false).await;
+                audit::log_login(&state.db, row.id as i64, &row.username, ip.as_deref(), false).await;
                 render_login_error(&state, "Ungültige Zugangsdaten")
             }
         }

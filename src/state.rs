@@ -38,12 +38,6 @@ impl AppState {
     }
 }
 
-impl FromRef<AppState> for AppState {
-    fn from_ref(input: &AppState) -> Self {
-        input.clone()
-    }
-}
-
 impl FromRef<AppState> for SqlitePool {
     fn from_ref(input: &AppState) -> Self {
         input.db.clone()

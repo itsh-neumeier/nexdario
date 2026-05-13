@@ -188,13 +188,13 @@ pub async fn update(
         let is_superadmin: i64 = sqlx::query_scalar!(
             "SELECT COUNT(*) FROM user_roles ur JOIN roles r ON r.id=ur.role_id
              WHERE ur.user_id=? AND r.name='superadmin'", id
-        ).fetch_one(&state.db).await?;
+        ).fetch_one(&state.db).await?.unwrap_or(0) as i64;
 
         if is_superadmin > 0 {
             let superadmin_count: i64 = sqlx::query_scalar!(
                 "SELECT COUNT(*) FROM users u JOIN user_roles ur ON ur.user_id=u.id
                  JOIN roles r ON r.id=ur.role_id WHERE r.name='superadmin' AND u.is_active=1"
-            ).fetch_one(&state.db).await?;
+            ).fetch_one(&state.db).await?.unwrap_or(0) as i64;
 
             if superadmin_count <= 1 {
                 return Err(AppError::bad_request("Der letzte aktive Superadmin kann nicht deaktiviert werden."));

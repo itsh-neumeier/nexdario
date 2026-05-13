@@ -88,7 +88,7 @@ pub async fn action(
                 // Create if not exists
                 let role_id: Option<i64> = sqlx::query_scalar!(
                     "SELECT id FROM roles WHERE name='superadmin'"
-                ).fetch_optional(&state.db).await?;
+                ).fetch_optional(&state.db).await?.flatten();
 
                 let user_id = sqlx::query!(
                     "INSERT INTO users (username, email, display_name, password_hash, is_active, is_system)

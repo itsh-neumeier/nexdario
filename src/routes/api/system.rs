@@ -14,7 +14,9 @@ pub async fn info(State(state): State<AppState>) -> impl IntoResponse {
     let user_count: i64 = sqlx::query_scalar!("SELECT COUNT(*) FROM users WHERE is_active=1")
         .fetch_one(&state.db)
         .await
-        .unwrap_or(0);
+        .ok()
+        .flatten()
+        .unwrap_or(0) as i64;
 
     Json(json!({
         "app_name": state.config.app_name,

@@ -110,7 +110,8 @@ async fn assign_role_permissions(
         role_name
     )
     .fetch_optional(pool)
-    .await?;
+    .await?
+    .flatten();
 
     let role_id = match role_id {
         Some(id) => id,
@@ -123,7 +124,8 @@ async fn assign_role_permissions(
             perm
         )
         .fetch_optional(pool)
-        .await?;
+        .await?
+        .flatten();
 
         if let Some(pid) = perm_id {
             sqlx::query!(
@@ -148,7 +150,8 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
          WHERE r.name = 'superadmin' AND u.is_active = 1"
     )
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0) as i64;
 
     if superadmin_count > 0 {
         tracing::info!("Superadmin already exists, skipping initial admin creation");
@@ -158,7 +161,8 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
     // Check if any user exists
     let user_count: i64 = sqlx::query_scalar!("SELECT COUNT(*) FROM users")
         .fetch_one(pool)
-        .await?;
+        .await?
+        .unwrap_or(0) as i64;
 
     if user_count > 0 {
         tracing::warn!(
@@ -189,7 +193,8 @@ async fn create_initial_admin(pool: &SqlitePool, config: &Config) -> anyhow::Res
     // Assign superadmin role
     let role_id: i64 = sqlx::query_scalar!("SELECT id FROM roles WHERE name = 'superadmin'")
         .fetch_one(pool)
-        .await?;
+        .await?
+        .unwrap_or(0);
 
     sqlx::query!(
         "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
@@ -238,7 +243,10 @@ async fn seed_number_sequences(pool: &SqlitePool) -> anyhow::Result<()> {
 }
 
 async fn seed_system_settings(pool: &SqlitePool, config: &Config) -> anyhow::Result<()> {
-    let settings = vec![
+    let backup_interval_str = config.backup_interval_hours.to_string();
+    let backup_enabled_str = if config.backup_enabled { "true" } else { "false" };
+
+    let settings: Vec<(&str, &str, &str)> = vec![
         ("app_name", config.app_name.as_str(), "Application name"),
         ("app_base_url", config.app_base_url.as_str(), "Base URL"),
         ("invoice_tax_number", "", "Steuernummer des Unternehmens"),
@@ -254,8 +262,8 @@ async fn seed_system_settings(pool: &SqlitePool, config: &Config) -> anyhow::Res
         ("invoice_default_tax_rate", "19", "Standard-Steuersatz (%)"),
         ("invoice_payment_terms", "14", "Standard-Zahlungsziel (Tage)"),
         ("xrechnung_version", "3.0.2", "XRechnung Version"),
-        ("backup_enabled", if config.backup_enabled { "true" } else { "false" }, "Automatische Backups"),
-        ("backup_interval_hours", &config.backup_interval_hours.to_string(), "Backup-Intervall Stunden"),
+        ("backup_enabled", backup_enabled_str, "Automatische Backups"),
+        ("backup_interval_hours", backup_interval_str.as_str(), "Backup-Intervall Stunden"),
         ("change_require_for_critical", "true", "IT-Change für kritische Aktionen"),
     ];
 

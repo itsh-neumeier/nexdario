@@ -31,7 +31,7 @@ pub async fn list(
     let status = q.status.as_deref().unwrap_or("active");
     let like = format!("%{}%", search);
 
-    let customers = if status == "all" {
+    let items: Vec<serde_json::Value> = if status == "all" {
         sqlx::query!(
             "SELECT id, customer_number, name, customer_type, status, industry, phone, email, billing_city
              FROM customers WHERE (name LIKE ? OR customer_number LIKE ? OR email LIKE ?)
@@ -40,6 +40,13 @@ pub async fn list(
         )
         .fetch_all(&state.db)
         .await?
+        .into_iter()
+        .map(|c| serde_json::json!({
+            "id": c.id, "customer_number": c.customer_number, "name": c.name,
+            "customer_type": c.customer_type, "status": c.status, "industry": c.industry,
+            "phone": c.phone, "email": c.email, "billing_city": c.billing_city,
+        }))
+        .collect()
     } else {
         sqlx::query!(
             "SELECT id, customer_number, name, customer_type, status, industry, phone, email, billing_city
@@ -49,24 +56,14 @@ pub async fn list(
         )
         .fetch_all(&state.db)
         .await?
-    };
-
-    let items: Vec<serde_json::Value> = customers
         .into_iter()
-        .map(|c| {
-            serde_json::json!({
-                "id": c.id,
-                "customer_number": c.customer_number,
-                "name": c.name,
-                "customer_type": c.customer_type,
-                "status": c.status,
-                "industry": c.industry,
-                "phone": c.phone,
-                "email": c.email,
-                "billing_city": c.billing_city,
-            })
-        })
-        .collect();
+        .map(|c| serde_json::json!({
+            "id": c.id, "customer_number": c.customer_number, "name": c.name,
+            "customer_type": c.customer_type, "status": c.status, "industry": c.industry,
+            "phone": c.phone, "email": c.email, "billing_city": c.billing_city,
+        }))
+        .collect()
+    };
 
     state.render(
         "customers/list.html",
@@ -237,6 +234,7 @@ pub async fn create(
     let status = form.status.as_deref().unwrap_or("active");
     let billing_country = form.billing_country.as_deref().unwrap_or("DE");
     let payment_terms = form.payment_terms.as_deref().unwrap_or("14");
+    let tax_country = form.tax_country.as_deref().unwrap_or("DE");
 
     let id = sqlx::query!(
         "INSERT INTO customers (customer_number, name, customer_type, status, industry, website,
@@ -246,7 +244,7 @@ pub async fn create(
         number, form.name, customer_type, status,
         form.industry, form.website, form.phone, form.email,
         form.billing_street, form.billing_zip, form.billing_city, billing_country,
-        form.vat_id, form.tax_country.as_deref().unwrap_or("DE"), payment_terms,
+        form.vat_id, tax_country, payment_terms,
         form.debtor_account, form.notes
     )
     .execute(&state.db)
@@ -326,6 +324,7 @@ pub async fn update(
     let status = form.status.as_deref().unwrap_or("active");
     let billing_country = form.billing_country.as_deref().unwrap_or("DE");
     let payment_terms = form.payment_terms.as_deref().unwrap_or("14");
+    let tax_country = form.tax_country.as_deref().unwrap_or("DE");
 
     sqlx::query!(
         "UPDATE customers SET name=?, customer_type=?, status=?, industry=?, website=?,
@@ -335,7 +334,7 @@ pub async fn update(
         form.name, customer_type, status, form.industry, form.website,
         form.phone, form.email, form.billing_street, form.billing_zip,
         form.billing_city, billing_country, form.vat_id,
-        form.tax_country.as_deref().unwrap_or("DE"), payment_terms,
+        tax_country, payment_terms,
         form.debtor_account, form.notes, id
     )
     .execute(&state.db)

@@ -96,7 +96,9 @@ fn setup_templates(templates_dir: &str) -> anyhow::Result<Environment<'static>> 
 
     // Add custom filters
     env.add_filter("format_money", |value: minijinja::Value| -> String {
-        let n = value.as_f64().unwrap_or(0.0);
+        let n = value.as_i64().map(|i| i as f64)
+            .or_else(|| value.as_str().and_then(|s| s.parse().ok()))
+            .unwrap_or(0.0);
         format!("{:.2}", n).replace('.', ",")
     });
 

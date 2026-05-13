@@ -18,7 +18,7 @@ pub async fn list(
     let search = q.search.as_deref().unwrap_or("");
     let like = format!("%{}%", search);
 
-    let contacts = if let Some(cid) = q.customer_id {
+    let items: Vec<serde_json::Value> = if let Some(cid) = q.customer_id {
         sqlx::query!(
             "SELECT c.id, c.first_name, c.last_name, c.display_name, c.position, c.phone, c.email,
              c.is_primary, c.status, cu.name as customer_name, c.customer_id
@@ -29,6 +29,15 @@ pub async fn list(
         )
         .fetch_all(&state.db)
         .await?
+        .into_iter()
+        .map(|c| serde_json::json!({
+            "id": c.id, "first_name": c.first_name, "last_name": c.last_name,
+            "display_name": c.display_name, "position": c.position,
+            "phone": c.phone, "email": c.email,
+            "is_primary": c.is_primary != 0, "status": c.status,
+            "customer_name": c.customer_name, "customer_id": c.customer_id,
+        }))
+        .collect()
     } else {
         sqlx::query!(
             "SELECT c.id, c.first_name, c.last_name, c.display_name, c.position, c.phone, c.email,
@@ -40,15 +49,16 @@ pub async fn list(
         )
         .fetch_all(&state.db)
         .await?
+        .into_iter()
+        .map(|c| serde_json::json!({
+            "id": c.id, "first_name": c.first_name, "last_name": c.last_name,
+            "display_name": c.display_name, "position": c.position,
+            "phone": c.phone, "email": c.email,
+            "is_primary": c.is_primary != 0, "status": c.status,
+            "customer_name": c.customer_name, "customer_id": c.customer_id,
+        }))
+        .collect()
     };
-
-    let items: Vec<serde_json::Value> = contacts.into_iter().map(|c| serde_json::json!({
-        "id": c.id, "first_name": c.first_name, "last_name": c.last_name,
-        "display_name": c.display_name, "position": c.position,
-        "phone": c.phone, "email": c.email,
-        "is_primary": c.is_primary != 0, "status": c.status,
-        "customer_name": c.customer_name, "customer_id": c.customer_id,
-    })).collect();
 
     // Load customers for filter
     let customers = sqlx::query!("SELECT id, name FROM customers WHERE status='active' ORDER BY name LIMIT 200")
@@ -189,6 +199,20 @@ pub async fn create(
 
     let display_name = format!("{} {}", form.first_name.trim(), form.last_name.trim()).trim().to_string();
     let status = form.status.as_deref().unwrap_or("active");
+    let preferred_contact = form.preferred_contact.as_deref().unwrap_or("email");
+    let language = form.language.as_deref().unwrap_or("de");
+    let is_primary = bool_field(&form.is_primary);
+    let is_technical = bool_field(&form.is_technical);
+    let is_commercial = bool_field(&form.is_commercial);
+    let is_emergency = bool_field(&form.is_emergency);
+    let name_vis = bool_field(&form.name_visible_to_service);
+    let phone_vis = bool_field(&form.phone_visible_to_service);
+    let mobile_vis = bool_field(&form.mobile_visible_to_service);
+    let email_vis = bool_field(&form.email_visible_to_service);
+    let role_vis = bool_field(&form.role_visible_to_service);
+    let dept_vis = bool_field(&form.department_visible_to_service);
+    let desc_vis = bool_field(&form.description_visible_to_service);
+    let notes_vis = bool_field(&form.notes_visible_to_service);
 
     let id = sqlx::query!(
         "INSERT INTO contacts (customer_id, first_name, last_name, display_name, position, department,
@@ -201,20 +225,10 @@ pub async fn create(
         form.customer_id, form.first_name, form.last_name, display_name,
         form.position, form.department, form.role, form.phone, form.mobile,
         form.email, form.email_alt,
-        form.preferred_contact.as_deref().unwrap_or("email"),
-        form.language.as_deref().unwrap_or("de"),
+        preferred_contact, language,
         form.description, form.notes,
-        bool_field(&form.is_primary), bool_field(&form.is_technical),
-        bool_field(&form.is_commercial), bool_field(&form.is_emergency),
-        status,
-        bool_field(&form.name_visible_to_service),
-        bool_field(&form.phone_visible_to_service),
-        bool_field(&form.mobile_visible_to_service),
-        bool_field(&form.email_visible_to_service),
-        bool_field(&form.role_visible_to_service),
-        bool_field(&form.department_visible_to_service),
-        bool_field(&form.description_visible_to_service),
-        bool_field(&form.notes_visible_to_service)
+        is_primary, is_technical, is_commercial, is_emergency, status,
+        name_vis, phone_vis, mobile_vis, email_vis, role_vis, dept_vis, desc_vis, notes_vis
     )
     .execute(&state.db)
     .await?
@@ -278,6 +292,20 @@ pub async fn update(
 
     let display_name = format!("{} {}", form.first_name.trim(), form.last_name.trim()).trim().to_string();
     let status = form.status.as_deref().unwrap_or("active");
+    let preferred_contact = form.preferred_contact.as_deref().unwrap_or("email");
+    let language = form.language.as_deref().unwrap_or("de");
+    let is_primary = bool_field(&form.is_primary);
+    let is_technical = bool_field(&form.is_technical);
+    let is_commercial = bool_field(&form.is_commercial);
+    let is_emergency = bool_field(&form.is_emergency);
+    let name_vis = bool_field(&form.name_visible_to_service);
+    let phone_vis = bool_field(&form.phone_visible_to_service);
+    let mobile_vis = bool_field(&form.mobile_visible_to_service);
+    let email_vis = bool_field(&form.email_visible_to_service);
+    let role_vis = bool_field(&form.role_visible_to_service);
+    let dept_vis = bool_field(&form.department_visible_to_service);
+    let desc_vis = bool_field(&form.description_visible_to_service);
+    let notes_vis = bool_field(&form.notes_visible_to_service);
 
     sqlx::query!(
         "UPDATE contacts SET customer_id=?, first_name=?, last_name=?, display_name=?, position=?,
@@ -290,15 +318,10 @@ pub async fn update(
         form.customer_id, form.first_name, form.last_name, display_name,
         form.position, form.department, form.role, form.phone, form.mobile,
         form.email, form.email_alt,
-        form.preferred_contact.as_deref().unwrap_or("email"),
-        form.language.as_deref().unwrap_or("de"),
+        preferred_contact, language,
         form.description, form.notes,
-        bool_field(&form.is_primary), bool_field(&form.is_technical),
-        bool_field(&form.is_commercial), bool_field(&form.is_emergency), status,
-        bool_field(&form.name_visible_to_service), bool_field(&form.phone_visible_to_service),
-        bool_field(&form.mobile_visible_to_service), bool_field(&form.email_visible_to_service),
-        bool_field(&form.role_visible_to_service), bool_field(&form.department_visible_to_service),
-        bool_field(&form.description_visible_to_service), bool_field(&form.notes_visible_to_service),
+        is_primary, is_technical, is_commercial, is_emergency, status,
+        name_vis, phone_vis, mobile_vis, email_vis, role_vis, dept_vis, desc_vis, notes_vis,
         id
     )
     .execute(&state.db).await?;
